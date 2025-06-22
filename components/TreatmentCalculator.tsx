@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, ScrollView, PanResponder } from 'react-native';
-import { Calculator, Droplets, DollarSign, ShoppingCart, X } from 'lucide-react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Modal, 
+  Animated, 
+  ScrollView, 
+  PanResponder,
+  Dimensions 
+} from 'react-native';
+import { Calculator, Droplets, DollarSign, ShoppingCart, X, ChevronDown } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, getThemeColors } from '../constants/colors';
 import { useAppContext } from '../context/AppContext';
 import { useTranslation } from '../hooks/useTranslation';
+import { treatmentDatabase } from '../constants/mockData';
+
+const { width } = Dimensions.get('window');
 
 interface TreatmentCalculatorProps {
   visible: boolean;
@@ -28,12 +41,16 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
   const { t } = useTranslation();
   const theme = getThemeColors(isDarkMode);
   
-  const [fieldSize, setFieldSize] = useState(1); // in acres
-  const [concentration, setConcentration] = useState(2); // percentage
+  const [fieldSize, setFieldSize] = useState(1.1);
+  const [concentration, setConcentration] = useState(2.0);
+  const [selectedTreatment, setSelectedTreatment] = useState(treatmentName);
+  const [showTreatmentPicker, setShowTreatmentPicker] = useState(false);
   const [slideAnim] = useState(new Animated.Value(300));
   const [result, setResult] = useState<CalculationResult | null>(null);
 
   const isMetric = state.settings.units === 'metric';
+  const treatmentOptions = Object.keys(treatmentDatabase);
+  const currentTreatment = treatmentDatabase[selectedTreatment] || treatmentDatabase['Neem Oil'];
 
   useEffect(() => {
     if (visible) {
@@ -49,16 +66,14 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
 
   useEffect(() => {
     calculateTreatment();
-  }, [fieldSize, concentration, isMetric]);
+  }, [fieldSize, concentration, selectedTreatment, isMetric]);
 
   const calculateTreatment = () => {
-    // Mock calculation based on field size and concentration
-    const baseAmount = fieldSize * (isMetric ? 2.5 : 1); // liters per acre or gallons per acre
+    const baseAmount = fieldSize * (isMetric ? 2.5 : 1); // liters per hectare or gallons per acre
     const treatmentAmount = (baseAmount * concentration) / 100;
     const waterAmount = baseAmount - treatmentAmount;
-    const costPerUnit = 15; // cost per liter/gallon
-    const totalCost = treatmentAmount * costPerUnit;
-    const applications = Math.ceil(fieldSize / 0.5); // applications needed
+    const totalCost = treatmentAmount * currentTreatment.costPerLiter;
+    const applications = Math.ceil(fieldSize / 0.5);
 
     setResult({
       totalAmount: treatmentAmount,
@@ -79,25 +94,85 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        // Optional: Add haptic feedback here
+        // Haptic feedback would go here for mobile
       },
       onPanResponderMove: (evt, gestureState) => {
-        const { dx } = gestureState;
-        const sliderWidth = 200; // Approximate slider width
-        const percentage = Math.max(0, Math.min(1, (dx + sliderWidth / 2) / sliderWidth));
+        const { locationX } = evt.nativeEvent;
+        const sliderWidth = width - 80; // Account for padding
+        const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
         const newValue = min + (max - min) * percentage;
         const steppedValue = Math.round(newValue / step) * step;
         const clampedValue = Math.max(min, Math.min(max, steppedValue));
         onChange(clampedValue);
       },
       onPanResponderRelease: () => {
-        // Optional: Add haptic feedback here
+        // Haptic feedback would go here for mobile
       },
     });
   };
 
   const fieldSizePanResponder = createSliderPanResponder(fieldSize, 0.1, 10, 0.1, setFieldSize);
   const concentrationPanResponder = createSliderPanResponder(concentration, 0.5, 10, 0.5, setConcentration);
+
+  const renderTreatmentPicker = () => (
+    <View style={styles.treatmentPickerContainer}>
+      <TouchableOpacity
+        onPress={() => setShowTreatmentPicker(!showTreatmentPicker)}
+        style={[styles.treatmentPicker, { backgroundColor: theme.surface, borderColor: theme.border }]}
+      >
+        <View style={styles.treatmentPickerContent}>
+          <Text style={[styles.treatmentPickerText, { color: theme.text }]}>{selectedTreatment}</Text>
+          <Text style={[styles.treatmentPickerType, { color: theme.textSecondary }]}>
+            {currentTreatment.type} • ${currentTreatment.costPerLiter}/L
+          </Text>
+        </View>
+        <ChevronDown 
+          size={20} 
+          color={theme.textSecondary} 
+          style={{ transform: [{ rotate: showTreatmentPicker ? '180deg' : '0deg' }] }}
+        />
+      </TouchableOpacity>
+
+      {showTreatmentPicker && (
+        <View style={[styles.treatmentOptions, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <ScrollView style={styles.treatmentOptionsScroll} nestedScrollEnabled={true}>
+            {treatmentOptions.map((treatment) => {
+              const treatmentData = treatmentDatabase[treatment];
+              return (
+                <TouchableOpacity
+                  key={treatment}
+                  onPress={() => {
+                    setSelectedTreatment(treatment);
+                    setConcentration(treatmentData.baseConcentration);
+                    setShowTreatmentPicker(false);
+                  }}
+                  style={[
+                    styles.treatmentOption,
+                    selectedTreatment === treatment && { backgroundColor: Colors.primary[50] }
+                  ]}
+                >
+                  <View style={styles.treatmentOptionContent}>
+                    <Text style={[styles.treatmentOptionName, { color: theme.text }]}>{treatment}</Text>
+                    <Text style={[styles.treatmentOptionDesc, { color: theme.textSecondary }]}>
+                      {treatmentData.description}
+                    </Text>
+                    <View style={styles.treatmentOptionMeta}>
+                      <Text style={[styles.treatmentOptionType, { color: Colors.primary[600] }]}>
+                        {treatmentData.type}
+                      </Text>
+                      <Text style={[styles.treatmentOptionCost, { color: theme.textSecondary }]}>
+                        ${treatmentData.costPerLiter}/L
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
 
   const renderSlider = (
     label: string,
@@ -178,7 +253,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
               <Text style={styles.stepNumberText}>1</Text>
             </View>
             <Text style={[styles.stepText, { color: theme.textSecondary }]}>
-              Measure {result.totalAmount.toFixed(1)} {isMetric ? 'L' : 'gal'} of {treatmentName}
+              Measure {result.totalAmount.toFixed(1)} {isMetric ? 'L' : 'gal'} of {selectedTreatment}
             </Text>
           </View>
           
@@ -200,6 +275,11 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
             </Text>
           </View>
         </View>
+
+        <View style={[styles.safetyNote, { backgroundColor: theme.background }]}>
+          <Text style={[styles.safetyTitle, { color: Colors.accent.orange }]}>⚠️ Safety Notes</Text>
+          <Text style={[styles.safetyText, { color: theme.textSecondary }]}>{currentTreatment.safetyNotes}</Text>
+        </View>
       </View>
     );
   };
@@ -216,17 +296,21 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
         
         <View style={styles.costItems}>
           <View style={styles.costItem}>
-            <Text style={[styles.costLabel, { color: theme.textSecondary }]}>{treatmentName}:</Text>
+            <Text style={[styles.costLabel, { color: theme.textSecondary }]}>{selectedTreatment}:</Text>
             <Text style={[styles.costValue, { color: theme.text }]}>${result.cost.toFixed(2)}</Text>
           </View>
           <View style={styles.costItem}>
             <Text style={[styles.costLabel, { color: theme.textSecondary }]}>Water:</Text>
             <Text style={[styles.costValue, { color: theme.text }]}>$0.00</Text>
           </View>
+          <View style={styles.costItem}>
+            <Text style={[styles.costLabel, { color: theme.textSecondary }]}>Applications needed:</Text>
+            <Text style={[styles.costValue, { color: theme.text }]}>{result.applications}</Text>
+          </View>
           <View style={[styles.costItem, styles.totalCost, { borderTopColor: theme.border }]}>
-            <Text style={[styles.costLabel, { color: theme.text, fontWeight: 'bold' }]}>Total:</Text>
+            <Text style={[styles.costLabel, { color: theme.text, fontWeight: 'bold' }]}>Total Cost:</Text>
             <Text style={[styles.costValue, { color: Colors.primary[600], fontWeight: 'bold' }]}>
-              ${result.cost.toFixed(2)}
+              ${(result.cost * result.applications).toFixed(2)}
             </Text>
           </View>
         </View>
@@ -263,9 +347,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
             nestedScrollEnabled={true}
           >
             <View style={styles.content}>
-              <Text style={[styles.treatmentName, { color: Colors.primary[600] }]}>
-                {treatmentName} Solution
-              </Text>
+              {renderTreatmentPicker()}
 
               {renderSlider(
                 'Field Size',
@@ -316,7 +398,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    height: '85%',
+    height: '90%',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
@@ -350,11 +432,85 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
-  treatmentName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  treatmentPickerContainer: {
     marginBottom: 24,
+    position: 'relative',
+    zIndex: 1000,
+  },
+  treatmentPicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  treatmentPickerContent: {
+    flex: 1,
+  },
+  treatmentPickerText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  treatmentPickerType: {
+    fontSize: 12,
+    textTransform: 'capitalize',
+  },
+  treatmentOptions: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    borderRadius: 12,
+    borderWidth: 1,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    maxHeight: 300,
+    zIndex: 1001,
+  },
+  treatmentOptionsScroll: {
+    maxHeight: 280,
+  },
+  treatmentOption: {
+    padding: 12,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e5e5e5',
+  },
+  treatmentOptionContent: {
+    flex: 1,
+  },
+  treatmentOptionName: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  treatmentOptionDesc: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 6,
+  },
+  treatmentOptionMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  treatmentOptionType: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  treatmentOptionCost: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   sliderContainer: {
     marginBottom: 32,
@@ -442,6 +598,7 @@ const styles = StyleSheet.create({
   },
   mixingSteps: {
     gap: 12,
+    marginBottom: 16,
   },
   mixingStep: {
     flexDirection: 'row',
@@ -464,6 +621,21 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     lineHeight: 20,
+  },
+  safetyNote: {
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.accent.orange,
+  },
+  safetyTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  safetyText: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   costBreakdown: {
     borderRadius: 12,

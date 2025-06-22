@@ -1,6 +1,19 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, Image, PanResponder, ScrollView, Dimensions } from 'react-native';
-import { ArrowLeftRight, X, Calendar, TrendingUp } from 'lucide-react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Modal, 
+  Animated, 
+  Image, 
+  PanResponder, 
+  ScrollView, 
+  Dimensions,
+  Alert 
+} from 'react-native';
+import { ArrowLeftRight, X, Calendar, TrendingUp, Camera, ImageIcon } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Colors, getThemeColors } from '../constants/colors';
 import { useAppContext } from '../context/AppContext';
 import { useTranslation } from '../hooks/useTranslation';
@@ -17,8 +30,8 @@ interface PhotoComparisonProps {
 export const PhotoComparison: React.FC<PhotoComparisonProps> = ({
   visible,
   onClose,
-  beforeImage = 'https://images.pexels.com/photos/1301856/pexels-photo-1301856.jpeg?auto=compress&cs=tinysrgb&w=800',
-  afterImage = 'https://images.pexels.com/photos/1459339/pexels-photo-1459339.jpeg?auto=compress&cs=tinysrgb&w=800'
+  beforeImage: initialBeforeImage,
+  afterImage: initialAfterImage
 }) => {
   const { isDarkMode } = useAppContext();
   const { t } = useTranslation();
@@ -27,6 +40,12 @@ export const PhotoComparison: React.FC<PhotoComparisonProps> = ({
   const [sliderPosition, setSliderPosition] = useState(50);
   const [slideAnim] = useState(new Animated.Value(300));
   const [containerWidth, setContainerWidth] = useState(width - 80);
+  const [beforeImage, setBeforeImage] = useState(
+    initialBeforeImage || 'https://images.pexels.com/photos/1459339/pexels-photo-1459339.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+  const [afterImage, setAfterImage] = useState(
+    initialAfterImage || 'https://images.pexels.com/photos/1301856/pexels-photo-1301856.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
 
   React.useEffect(() => {
     if (visible) {
@@ -56,9 +75,41 @@ export const PhotoComparison: React.FC<PhotoComparisonProps> = ({
     },
   });
 
+  const selectImage = async (type: 'before' | 'after') => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Media library permission is required to select images.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+        allowsMultipleSelection: false,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        if (type === 'before') {
+          setBeforeImage(result.assets[0].uri);
+        } else {
+          setAfterImage(result.assets[0].uri);
+        }
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to select image. Please try again.');
+    }
+  };
+
   const calculateImprovement = () => {
-    // Mock improvement calculation
-    return Math.round(Math.random() * 40 + 30); // 30-70% improvement
+    // Mock improvement calculation based on slider position and time
+    const baseImprovement = Math.round(Math.random() * 40 + 30); // 30-70% improvement
+    const positionBonus = Math.round((sliderPosition - 50) / 10); // Slight variation based on comparison
+    return Math.max(10, Math.min(95, baseImprovement + positionBonus));
   };
 
   const improvement = calculateImprovement();
@@ -92,6 +143,29 @@ export const PhotoComparison: React.FC<PhotoComparisonProps> = ({
             nestedScrollEnabled={true}
           >
             <View style={styles.content}>
+              {/* Image Selection Controls */}
+              <View style={styles.imageSelectionContainer}>
+                <TouchableOpacity 
+                  onPress={() => selectImage('before')}
+                  style={[styles.imageSelectButton, { backgroundColor: theme.surface }]}
+                >
+                  <Camera size={16} color={Colors.primary[500]} />
+                  <Text style={[styles.imageSelectText, { color: Colors.primary[500] }]}>
+                    Select Before Image
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  onPress={() => selectImage('after')}
+                  style={[styles.imageSelectButton, { backgroundColor: theme.surface }]}
+                >
+                  <ImageIcon size={16} color={Colors.secondary[500]} />
+                  <Text style={[styles.imageSelectText, { color: Colors.secondary[500] }]}>
+                    Select After Image
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               <View style={styles.comparisonContainer}>
                 <View 
                   style={styles.imageContainer}
@@ -102,7 +176,14 @@ export const PhotoComparison: React.FC<PhotoComparisonProps> = ({
                   {...panResponder.panHandlers}
                 >
                   {/* Before Image */}
-                  <Image source={{ uri: beforeImage }} style={styles.beforeImage} />
+                  <Image 
+                    source={{ uri: beforeImage }} 
+                    style={styles.beforeImage}
+                    onError={(error) => {
+                      console.warn('Before image failed to load:', error);
+                      setBeforeImage('https://images.pexels.com/photos/1459339/pexels-photo-1459339.jpeg?auto=compress&cs=tinysrgb&w=800');
+                    }}
+                  />
                   
                   {/* After Image with Clip */}
                   <View 
@@ -111,7 +192,14 @@ export const PhotoComparison: React.FC<PhotoComparisonProps> = ({
                       { width: `${sliderPosition}%` }
                     ]}
                   >
-                    <Image source={{ uri: afterImage }} style={[styles.afterImage, { width: containerWidth }]} />
+                    <Image 
+                      source={{ uri: afterImage }} 
+                      style={[styles.afterImage, { width: containerWidth }]}
+                      onError={(error) => {
+                        console.warn('After image failed to load:', error);
+                        setAfterImage('https://images.pexels.com/photos/1301856/pexels-photo-1301856.jpeg?auto=compress&cs=tinysrgb&w=800');
+                      }}
+                    />
                   </View>
                   
                   {/* Slider Line */}
@@ -241,8 +329,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    width: '90%',
-    maxHeight: '85%',
+    width: '95%',
+    maxHeight: '90%',
     borderRadius: 20,
   },
   header: {
@@ -275,6 +363,30 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
+  imageSelectionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 12,
+  },
+  imageSelectButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    gap: 8,
+  },
+  imageSelectText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   comparisonContainer: {
     marginBottom: 20,
   },
@@ -284,6 +396,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 12,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   beforeImage: {
     width: '100%',
@@ -309,6 +426,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     marginLeft: -1,
     zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   sliderHandle: {
     position: 'absolute',
@@ -321,11 +442,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: -12,
-    elevation: 4,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowRadius: 8,
   },
   labelsContainer: {
     flexDirection: 'row',
@@ -351,6 +472,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
   },
   instructionsText: {
     fontSize: 12,

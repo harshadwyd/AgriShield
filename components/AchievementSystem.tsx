@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Modal } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Animated, 
+  Modal, 
+  ScrollView,
+  Dimensions 
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Trophy, Star, Target, Zap, Award, Camera, BookOpen, TrendingUp } from 'lucide-react-native';
+import { Trophy, Star, Target, Zap, Award, Camera, BookOpen, TrendingUp, X } from 'lucide-react-native';
 import { Colors, getThemeColors } from '../constants/colors';
 import { useAppContext } from '../context/AppContext';
 import { useTranslation } from '../hooks/useTranslation';
+
+const { height } = Dimensions.get('window');
 
 interface Achievement {
   id: string;
@@ -98,6 +109,50 @@ export const AchievementSystem: React.FC<AchievementSystemProps> = ({ visible, o
       unlocked: false,
       category: 'milestone',
       rarity: 'legendary'
+    },
+    {
+      id: 'pest_hunter',
+      title: 'Pest Hunter',
+      description: 'Detect 20 different pest types',
+      icon: <Target size={24} color="white" />,
+      progress: 8, // Mock progress
+      maxProgress: 20,
+      unlocked: false,
+      category: 'scanning',
+      rarity: 'rare'
+    },
+    {
+      id: 'disease_detective',
+      title: 'Disease Detective',
+      description: 'Identify 15 plant diseases',
+      icon: <Zap size={24} color="white" />,
+      progress: 5, // Mock progress
+      maxProgress: 15,
+      unlocked: false,
+      category: 'scanning',
+      rarity: 'rare'
+    },
+    {
+      id: 'knowledge_seeker',
+      title: 'Knowledge Seeker',
+      description: 'Complete 10 educational modules',
+      icon: <BookOpen size={24} color="white" />,
+      progress: 2, // Mock progress
+      maxProgress: 10,
+      unlocked: false,
+      category: 'learning',
+      rarity: 'epic'
+    },
+    {
+      id: 'consistency_champion',
+      title: 'Consistency Champion',
+      description: 'Maintain a 30-day usage streak',
+      icon: <TrendingUp size={24} color="white" />,
+      progress: 12, // Mock progress
+      maxProgress: 30,
+      unlocked: false,
+      category: 'streak',
+      rarity: 'epic'
     }
   ];
 
@@ -215,7 +270,7 @@ export const AchievementSystem: React.FC<AchievementSystemProps> = ({ visible, o
               <Text style={[styles.headerTitle, { color: theme.text }]}>Achievements</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Text style={[styles.closeButtonText, { color: Colors.primary[500] }]}>Done</Text>
+              <X size={20} color={theme.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -236,7 +291,12 @@ export const AchievementSystem: React.FC<AchievementSystemProps> = ({ visible, o
             </View>
           </View>
 
-          <View style={styles.categoriesContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoriesContainer}
+            contentContainerStyle={styles.categoriesContent}
+          >
             {categories.map((category) => {
               const IconComponent = category.icon;
               return (
@@ -263,11 +323,18 @@ export const AchievementSystem: React.FC<AchievementSystemProps> = ({ visible, o
                 </TouchableOpacity>
               );
             })}
-          </View>
+          </ScrollView>
 
-          <View style={styles.achievementsList}>
+          <ScrollView 
+            style={styles.achievementsList}
+            contentContainerStyle={styles.achievementsContent}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+            scrollEnabled={true}
+            nestedScrollEnabled={true}
+          >
             {filteredAchievements.map(renderAchievement)}
-          </View>
+          </ScrollView>
         </Animated.View>
       </View>
     </Modal>
@@ -281,7 +348,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    height: '80%',
+    height: '85%',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 20,
@@ -307,10 +374,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  closeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
   statsContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -322,6 +385,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   statNumber: {
     fontSize: 20,
@@ -332,10 +400,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   categoriesContainer: {
-    flexDirection: 'row',
     paddingHorizontal: 20,
     marginBottom: 16,
+    maxHeight: 50,
+  },
+  categoriesContent: {
     gap: 8,
+    paddingRight: 20,
   },
   categoryButton: {
     flexDirection: 'row',
@@ -344,6 +415,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     gap: 4,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
   },
   categoryText: {
     fontSize: 12,
@@ -352,6 +428,9 @@ const styles = StyleSheet.create({
   achievementsList: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  achievementsContent: {
+    paddingBottom: 40,
   },
   achievementCard: {
     flexDirection: 'row',

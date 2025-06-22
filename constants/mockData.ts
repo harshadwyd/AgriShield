@@ -309,6 +309,106 @@ export const mockDetectionResults: { [key: string]: DetectionResult } = {
   }
 };
 
+// Enhanced treatment options database
+export const treatmentDatabase = {
+  'Neem Oil': {
+    name: 'Neem Oil',
+    type: 'organic',
+    baseConcentration: 2.0, // percentage
+    costPerLiter: 15.50,
+    description: 'Natural pesticide and fungicide derived from neem tree',
+    effectiveAgainst: ['aphids', 'whitefly', 'thrips', 'spider mites'],
+    mixingRatio: 0.02, // 2% concentration
+    waterRatio: 0.98,
+    safetyNotes: 'Apply during cooler hours to avoid leaf burn',
+    shelfLife: '2 years when stored properly'
+  },
+  'Copper Fungicide': {
+    name: 'Copper Fungicide',
+    type: 'organic',
+    baseConcentration: 1.5,
+    costPerLiter: 22.00,
+    description: 'Broad-spectrum fungicide for bacterial and fungal diseases',
+    effectiveAgainst: ['blight', 'leaf spot', 'bacterial diseases'],
+    mixingRatio: 0.015,
+    waterRatio: 0.985,
+    safetyNotes: 'Wear protective equipment. Avoid copper buildup in soil',
+    shelfLife: '3 years'
+  },
+  'Insecticidal Soap': {
+    name: 'Insecticidal Soap',
+    type: 'organic',
+    baseConcentration: 3.0,
+    costPerLiter: 12.75,
+    description: 'Gentle, non-toxic insecticide safe for beneficial insects',
+    effectiveAgainst: ['aphids', 'whitefly', 'soft-bodied insects'],
+    mixingRatio: 0.03,
+    waterRatio: 0.97,
+    safetyNotes: 'Safe for humans and pets. Test on small area first',
+    shelfLife: '1 year'
+  },
+  'Spinosad': {
+    name: 'Spinosad',
+    type: 'biological',
+    baseConcentration: 0.8,
+    costPerLiter: 45.00,
+    description: 'Biological insecticide derived from soil bacteria',
+    effectiveAgainst: ['thrips', 'caterpillars', 'leaf miners'],
+    mixingRatio: 0.008,
+    waterRatio: 0.992,
+    safetyNotes: 'Low toxicity to mammals. Avoid application during bee activity',
+    shelfLife: '2 years'
+  },
+  'Bacillus thuringiensis': {
+    name: 'Bacillus thuringiensis (Bt)',
+    type: 'biological',
+    baseConcentration: 1.2,
+    costPerLiter: 28.50,
+    description: 'Biological insecticide targeting caterpillars and larvae',
+    effectiveAgainst: ['caterpillars', 'moth larvae', 'beetle larvae'],
+    mixingRatio: 0.012,
+    waterRatio: 0.988,
+    safetyNotes: 'Completely safe for humans, pets, and beneficial insects',
+    shelfLife: '2 years when refrigerated'
+  },
+  'Horticultural Oil': {
+    name: 'Horticultural Oil',
+    type: 'organic',
+    baseConcentration: 2.5,
+    costPerLiter: 18.25,
+    description: 'Refined petroleum oil for controlling soft-bodied insects',
+    effectiveAgainst: ['scale insects', 'aphids', 'mites'],
+    mixingRatio: 0.025,
+    waterRatio: 0.975,
+    safetyNotes: 'Do not apply in hot weather or to drought-stressed plants',
+    shelfLife: '3 years'
+  },
+  'Diatomaceous Earth': {
+    name: 'Diatomaceous Earth',
+    type: 'organic',
+    baseConcentration: 5.0,
+    costPerLiter: 8.50,
+    description: 'Natural powder made from fossilized algae',
+    effectiveAgainst: ['crawling insects', 'slugs', 'snails'],
+    mixingRatio: 0.05,
+    waterRatio: 0.95,
+    safetyNotes: 'Use food-grade DE only. Avoid inhalation',
+    shelfLife: 'Indefinite when kept dry'
+  },
+  'Pyrethrin': {
+    name: 'Pyrethrin',
+    type: 'organic',
+    baseConcentration: 1.0,
+    costPerLiter: 35.75,
+    description: 'Natural insecticide derived from chrysanthemum flowers',
+    effectiveAgainst: ['flying insects', 'aphids', 'thrips'],
+    mixingRatio: 0.01,
+    waterRatio: 0.99,
+    safetyNotes: 'Fast-acting but breaks down quickly in sunlight',
+    shelfLife: '2 years'
+  }
+};
+
 export const mockEducationalContent: EducationalContent[] = [
   {
     id: '1',
