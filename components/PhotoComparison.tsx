@@ -12,7 +12,7 @@ import {
   Dimensions,
   Alert 
 } from 'react-native';
-import { ArrowLeftRight, X, Calendar, TrendingUp, Camera, ImageIcon } from 'lucide-react-native';
+import { ArrowLeftRight, X, Calendar, TrendingUp, Camera, Image as ImageIcon } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, getThemeColors } from '../constants/colors';
 import { useAppContext } from '../context/AppContext';
