@@ -32,7 +32,7 @@ export default function TabLayout() {
       
       return {
         height: 100,
-        paddingBottom: Math.max(systemNavHeight + 6, 12), // Ensure minimum padding
+        paddingBottom: Math.max(systemNavHeight + 8, 12), // Ensure minimum padding
         bottom: 0,
       };
     }
