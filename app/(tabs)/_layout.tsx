@@ -15,13 +15,13 @@ export default function TabLayout() {
   const colorScheme = isDarkMode ? DarkColors : Colors;
   const insets = useSafeAreaInsets();
 
-  // Calculate proper tab bar height and position
+  // Calculate proper tab bar height and position - more compact
   const getTabBarConfig = () => {
     if (Platform.OS === 'ios') {
       // For iOS, ensure we're above the home indicator
-      const bottomInset = Math.max(insets.bottom, 20); // Minimum 20px clearance
+      const bottomInset = Math.max(insets.bottom, 12); // Reduced from 20px
       return {
-        height: 75,
+        height: 60, // Reduced from 75
         paddingBottom: bottomInset,
         bottom: 0,
       };
@@ -31,8 +31,8 @@ export default function TabLayout() {
       const systemNavHeight = hasGestureNav ? insets.bottom : 0;
       
       return {
-        height: 75,
-        paddingBottom: Math.max(systemNavHeight + 8, 12), // Ensure minimum padding
+        height: 60, // Reduced from 75
+        paddingBottom: Math.max(systemNavHeight + 6, 8), // Reduced padding
         bottom: 0,
       };
     }
@@ -61,28 +61,28 @@ export default function TabLayout() {
           shadowOpacity: isDarkMode ? 0.5 : 0.2,
           shadowRadius: 16,
           paddingBottom: tabBarConfig.paddingBottom,
-          paddingTop: 12,
+          paddingTop: 6, // Reduced from 12
           paddingHorizontal: 8,
           // Ensure proper z-index
           zIndex: 1000,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10, // Slightly smaller
           fontWeight: '600',
-          marginTop: 4,
-          marginBottom: 2,
+          marginTop: 2, // Reduced from 4
+          marginBottom: 0, // Reduced from 2
           textAlign: 'center',
         },
         tabBarIconStyle: {
-          marginTop: 8,
-          marginBottom: 2,
+          marginTop: 4, // Reduced from 8
+          marginBottom: 0, // Reduced from 2
         },
         tabBarItemStyle: {
           flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
-          paddingVertical: 6,
-          height: 52,
+          paddingVertical: 4, // Reduced from 6
+          height: 44, // Reduced from 52
           // Better visual feedback
           borderRadius: 12,
           marginHorizontal: 2,
@@ -100,7 +100,7 @@ export default function TabLayout() {
           title: t('tabs.home'),
           tabBarIcon: ({ size, color, focused }) => (
             <Home 
-              size={focused ? size + 1 : size} 
+              size={focused ? size : size - 1} // Slightly smaller icons
               color={color}
               strokeWidth={focused ? 2.5 : 2}
             />
@@ -113,7 +113,7 @@ export default function TabLayout() {
           title: t('tabs.detect'),
           tabBarIcon: ({ size, color, focused }) => (
             <Scan 
-              size={focused ? size + 1 : size} 
+              size={focused ? size : size - 1} 
               color={color}
               strokeWidth={focused ? 2.5 : 2}
             />
@@ -126,7 +126,7 @@ export default function TabLayout() {
           title: t('tabs.history'),
           tabBarIcon: ({ size, color, focused }) => (
             <History 
-              size={focused ? size + 1 : size} 
+              size={focused ? size : size - 1} 
               color={color}
               strokeWidth={focused ? 2.5 : 2}
             />
@@ -139,7 +139,7 @@ export default function TabLayout() {
           title: t('tabs.learn'),
           tabBarIcon: ({ size, color, focused }) => (
             <BookOpen 
-              size={focused ? size + 1 : size} 
+              size={focused ? size : size - 1} 
               color={color}
               strokeWidth={focused ? 2.5 : 2}
             />
@@ -152,7 +152,7 @@ export default function TabLayout() {
           title: t('tabs.settings'),
           tabBarIcon: ({ size, color, focused }) => (
             <Settings 
-              size={focused ? size + 1 : size} 
+              size={focused ? size : size - 1} 
               color={color}
               strokeWidth={focused ? 2.5 : 2}
             />
