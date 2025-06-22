@@ -15,27 +15,25 @@ export default function TabLayout() {
   const colorScheme = isDarkMode ? DarkColors : Colors;
   const insets = useSafeAreaInsets();
 
-  // Calculate much higher tab bar position - 2.5x higher than before
+  // Calculate proper tab bar height and position
   const getTabBarConfig = () => {
     if (Platform.OS === 'ios') {
-      // For iOS, position much higher above home indicator
-      const bottomInset = Math.max(insets.bottom, 20);
-      const basePosition = 65 + bottomInset; // Original position
+      // For iOS, ensure we're above the home indicator
+      const bottomInset = Math.max(insets.bottom, 20); // Minimum 20px clearance
       return {
         height: 65,
         paddingBottom: bottomInset,
-        bottom: basePosition * 1.5, // 2.5x higher positioning
+        bottom: 0,
       };
     } else {
-      // For Android, position much higher above system navigation
+      // For Android, handle both gesture and button navigation
       const hasGestureNav = screenHeight > 800 && insets.bottom > 0;
       const systemNavHeight = hasGestureNav ? insets.bottom : 0;
-      const basePosition = 65 + Math.max(systemNavHeight + 8, 12);
       
       return {
         height: 65,
-        paddingBottom: Math.max(systemNavHeight + 8, 12),
-        bottom: basePosition * 1.5, // 2.5x higher positioning
+        paddingBottom: Math.max(systemNavHeight + 8, 12), // Ensure minimum padding
+        bottom: 0,
       };
     }
   };
@@ -57,22 +55,16 @@ export default function TabLayout() {
           bottom: tabBarConfig.bottom,
           left: 0,
           right: 0,
-          elevation: 20,
+          elevation: 16,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -8 },
-          shadowOpacity: isDarkMode ? 0.6 : 0.25,
-          shadowRadius: 20,
+          shadowOffset: { width: 0, height: -6 },
+          shadowOpacity: isDarkMode ? 0.5 : 0.2,
+          shadowRadius: 16,
           paddingBottom: tabBarConfig.paddingBottom,
           paddingTop: 12,
           paddingHorizontal: 8,
-          // Ensure proper z-index for higher position
+          // Ensure proper z-index
           zIndex: 1000,
-          // Add subtle border radius for floating effect
-          borderTopLeftRadius: 16,
-          borderTopRightRadius: 16,
-          // Enhanced visual separation
-          borderWidth: isDarkMode ? 0.5 : 0,
-          borderColor: isDarkMode ? colorScheme.neutral[200] : 'transparent',
         },
         tabBarLabelStyle: {
           fontSize: 11,
