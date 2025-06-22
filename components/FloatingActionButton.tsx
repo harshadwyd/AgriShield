@@ -167,7 +167,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 80,
+    bottom: Platform.OS === 'ios' ? 110 : 90, // Adjusted for new tab bar height
     right: 20,
     alignItems: 'center',
   },

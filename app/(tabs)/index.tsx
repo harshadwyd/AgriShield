@@ -121,7 +121,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContainer}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Dynamic Greeting */}
         <AdvancedAnimations animationType="slideUp" delay={0}>
           <DynamicGreeting />
@@ -175,7 +179,7 @@ export default function HomeScreen() {
         {/* Recent Activity */}
         {recentDetections.length > 0 && (
           <AdvancedAnimations animationType="morphIn" delay={600}>
-            <View style={[styles.section, { paddingBottom: 100 }]}>
+            <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('home.recentActivity')}</Text>
                 <TouchableOpacity onPress={() => router.push('/history')}>
@@ -244,6 +248,9 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: Platform.OS === 'ios' ? 120 : 100, // Extra padding for tab bar
   },
   statsContainer: {
     paddingHorizontal: 16,
