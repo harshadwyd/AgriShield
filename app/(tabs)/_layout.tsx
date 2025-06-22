@@ -21,7 +21,7 @@ export default function TabLayout() {
       // For iOS, ensure we're above the home indicator
       const bottomInset = Math.max(insets.bottom, 20); // Minimum 20px clearance
       return {
-        height: 105,
+        height: 100,
         paddingBottom: bottomInset,
         bottom: 0,
       };
@@ -31,7 +31,7 @@ export default function TabLayout() {
       const systemNavHeight = hasGestureNav ? insets.bottom : 0;
       
       return {
-        height: 105,
+        height: 100,
         paddingBottom: Math.max(systemNavHeight + 8, 12), // Ensure minimum padding
         bottom: 0,
       };
