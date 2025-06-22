@@ -37,6 +37,8 @@ export default function DetectScreen() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [detectionResult, setDetectionResult] = useState<Detection | null>(null);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
   const cameraRef = useRef<any>(null);
   const { dispatch, isDarkMode } = useAppContext();
   const { t } = useTranslation();
@@ -44,33 +46,76 @@ export default function DetectScreen() {
   const theme = getThemeColors(isDarkMode);
   const colorScheme = isDarkMode ? DarkColors : Colors;
 
+  const handleCameraReady = () => {
+    setIsCameraReady(true);
+  };
+
   const handleCameraCapture = async () => {
-    if (!cameraRef.current) return;
+    if (!cameraRef.current || !isCameraReady || isCapturing) {
+      console.warn('Camera not ready or already capturing');
+      return;
+    }
+    
+    setIsCapturing(true);
     
     try {
+      // Add a small delay to ensure camera is fully ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
         base64: false,
         skipProcessing: false,
+        exif: false,
       });
-      setCapturedImage(photo.uri);
-      setStep('preview');
+      
+      if (photo && photo.uri) {
+        setCapturedImage(photo.uri);
+        setStep('preview');
+      } else {
+        throw new Error('No image data received from camera');
+      }
     } catch (error) {
       console.error('Camera capture error:', error);
-      Alert.alert(t('error'), 'Failed to capture image. Please try again.');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to capture image. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('permissions')) {
+          errorMessage = 'Camera permission denied. Please check your device settings.';
+        } else if (error.message.includes('busy')) {
+          errorMessage = 'Camera is busy. Please wait a moment and try again.';
+        } else if (error.message.includes('storage')) {
+          errorMessage = 'Not enough storage space. Please free up some space and try again.';
+        }
+      }
+      
+      Alert.alert(t('error'), errorMessage);
+    } finally {
+      setIsCapturing(false);
     }
   };
 
   const handleImagePicker = async () => {
     try {
+      // Request media library permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(t('error'), 'Media library permission is required to select images.');
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        allowsMultipleSelection: false,
       });
 
-      if (!result.canceled && result.assets[0]) {
+      if (!result.canceled && result.assets && result.assets[0]) {
         setCapturedImage(result.assets[0].uri);
         setStep('preview');
       }
@@ -137,6 +182,7 @@ export default function DetectScreen() {
     setCapturedImage(null);
     setDetectionResult(null);
     setAnalysisProgress(0);
+    setIsCameraReady(false);
     setStep('capture');
   };
 
@@ -144,10 +190,12 @@ export default function DetectScreen() {
     setCapturedImage(null);
     setDetectionResult(null);
     setAnalysisProgress(0);
+    setIsCameraReady(false);
     setStep('capture');
   };
 
   const toggleCameraFacing = () => {
+    setIsCameraReady(false);
     setFacing(current => (current === 'back' ? 'front' : 'back'));
   };
 
@@ -198,6 +246,7 @@ export default function DetectScreen() {
           style={styles.camera} 
           facing={facing}
           flash={flash}
+          onCameraReady={handleCameraReady}
         >
           <View style={styles.cameraOverlay}>
             <View style={styles.guideline} />
@@ -221,9 +270,16 @@ export default function DetectScreen() {
             
             <TouchableOpacity
               onPress={handleCameraCapture}
-              style={styles.captureButton}
+              style={[
+                styles.captureButton,
+                (!isCameraReady || isCapturing) && styles.captureButtonDisabled
+              ]}
+              disabled={!isCameraReady || isCapturing}
             >
-              <View style={styles.captureButtonInner} />
+              <View style={[
+                styles.captureButtonInner,
+                isCapturing && styles.captureButtonCapturing
+              ]} />
             </TouchableOpacity>
             
             <TouchableOpacity onPress={toggleCameraFacing} style={styles.controlButton}>
@@ -232,6 +288,12 @@ export default function DetectScreen() {
           </View>
         </CameraView>
       </View>
+      
+      {!isCameraReady && (
+        <View style={styles.cameraLoadingOverlay}>
+          <EnhancedLoadingSpinner message="Preparing camera..." type="growing" />
+        </View>
+      )}
     </View>
   );
 
@@ -509,6 +571,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+    position: 'relative',
   },
   camera: {
     flex: 1,
@@ -582,11 +645,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
   },
+  captureButtonDisabled: {
+    opacity: 0.6,
+  },
   captureButtonInner: {
     width: 50,
     height: 50,
     borderRadius: 25,
     backgroundColor: 'white',
+  },
+  captureButtonCapturing: {
+    backgroundColor: '#f0f0f0',
+    transform: [{ scale: 0.9 }],
+  },
+  cameraLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
   },
   permissionContainer: {
     flex: 1,
