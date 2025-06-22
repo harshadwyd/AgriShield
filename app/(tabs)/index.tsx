@@ -46,16 +46,20 @@ import { mockWeatherData } from '../../constants/mockData';
 
 const { width, height } = Dimensions.get('window');
 
-// Custom hook for dynamic padding
+// Enhanced hook for dynamic padding that accounts for tab bar
 const useDynamicPadding = () => {
   const insets = useSafeAreaInsets();
   
   return useMemo(() => {
     if (Platform.OS === 'ios') {
-      return 90 + Math.max(insets.bottom, 0);
+      // Account for tab bar height + safe area + extra clearance
+      const bottomInset = Math.max(insets.bottom, 20);
+      return 65 + bottomInset + 20; // Tab bar + safe area + clearance
     } else {
+      // For Android, handle gesture navigation
       const hasGestureNav = height > 800 && insets.bottom > 0;
-      return hasGestureNav ? 85 + insets.bottom : 80;
+      const systemNavHeight = hasGestureNav ? insets.bottom : 0;
+      return 65 + Math.max(systemNavHeight + 8, 12) + 20; // Tab bar + nav + clearance
     }
   }, [insets.bottom]);
 };
@@ -162,6 +166,9 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false} 
         style={styles.scrollContainer}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: dynamicPadding }]}
+        // Improve scroll performance
+        removeClippedSubviews={true}
+        scrollEventThrottle={16}
       >
         {/* Dynamic Greeting */}
         <AdvancedAnimations animationType="slideUp" delay={0}>
@@ -308,6 +315,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    flexGrow: 1,
     // paddingBottom will be added dynamically via useDynamicPadding hook
   },
   statsContainer: {

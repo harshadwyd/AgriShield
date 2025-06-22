@@ -3,6 +3,7 @@ import { View, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-na
 import { Camera, Mic, Cloud, Phone, History, Plus, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, getThemeColors } from '../constants/colors';
 import { useAppContext } from '../context/AppContext';
 
@@ -22,6 +23,19 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const { isDarkMode } = useAppContext();
   const theme = getThemeColors(isDarkMode);
+  const insets = useSafeAreaInsets();
+
+  // Calculate proper position above tab bar
+  const getBottomPosition = () => {
+    if (Platform.OS === 'ios') {
+      const bottomInset = Math.max(insets.bottom, 20);
+      return 65 + bottomInset + 20; // Tab bar height + safe area + clearance
+    } else {
+      const hasGestureNav = insets.bottom > 0;
+      const systemNavHeight = hasGestureNav ? insets.bottom : 0;
+      return 65 + Math.max(systemNavHeight + 8, 12) + 20; // Tab bar + nav + clearance
+    }
+  };
 
   const actions = [
     {
@@ -140,8 +154,15 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      {isExpanded && <View style={[styles.overlay, { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.3)' }]} />}
+    <View style={[styles.container, { bottom: getBottomPosition() }]}>
+      {isExpanded && (
+        <View 
+          style={[
+            styles.overlay, 
+            { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.3)' }
+          ]} 
+        />
+      )}
       
       {actions.map((action, index) => renderActionButton(action, index))}
       
@@ -170,9 +191,9 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 115 : 95, // Adjusted for new tab bar height
     right: 20,
     alignItems: 'center',
+    zIndex: 1000,
   },
   overlay: {
     position: 'absolute',
