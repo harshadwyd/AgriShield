@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, Scan, History, BookOpen, Settings } from 'lucide-react-native';
+import { Chrome as Home, Scan, History, BookOpen, Settings } from 'lucide-react-native';
 import { Platform, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
