@@ -1,25 +1,29 @@
 import { Tabs } from 'expo-router';
 import { Chrome as Home, Scan, History, BookOpen, Settings } from 'lucide-react-native';
 import { Platform } from 'react-native';
-import { Colors } from '../../constants/colors';
+import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useAppContext } from '../../context/AppContext';
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const { isDarkMode } = useAppContext();
+  const theme = getThemeColors(isDarkMode);
+  const colorScheme = isDarkMode ? DarkColors : Colors;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary[600],
-        tabBarInactiveTintColor: Colors.neutral[400],
+        tabBarActiveTintColor: colorScheme.primary[600],
+        tabBarInactiveTintColor: isDarkMode ? colorScheme.neutral[400] : Colors.neutral[400],
         tabBarStyle: {
-          backgroundColor: 'white',
+          backgroundColor: theme.surface,
           borderTopWidth: 1,
-          borderTopColor: Colors.neutral[200],
+          borderTopColor: theme.border,
           paddingBottom: Platform.OS === 'ios' ? 25 : 8, // Extra padding for iOS home indicator
-          paddingTop: 8,
-          height: Platform.OS === 'ios' ? 85 : 65, // Taller on iOS to accommodate safe area
+          paddingTop: 12, // Increased top padding to move icons up
+          height: Platform.OS === 'ios' ? 90 : 70, // Slightly taller to accommodate icon movement
           position: 'absolute',
           bottom: 0,
           left: 0,
@@ -27,16 +31,18 @@ export default function TabLayout() {
           elevation: 8,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
+          shadowOpacity: isDarkMode ? 0.3 : 0.1,
           shadowRadius: 8,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
-          marginBottom: Platform.OS === 'ios' ? 0 : 4,
+          marginBottom: Platform.OS === 'ios' ? 2 : 6, // Adjusted for better spacing
+          marginTop: 2, // Small gap between icon and label
         },
         tabBarIconStyle: {
-          marginTop: 4,
+          marginTop: Platform.OS === 'ios' ? 6 : 8, // Move icons up more
+          marginBottom: 2,
         },
       }}
     >

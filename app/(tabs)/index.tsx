@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: Platform.OS === 'ios' ? 120 : 100, // Extra padding for tab bar
+    paddingBottom: Platform.OS === 'ios' ? 125 : 105, // Extra padding for new tab bar height
   },
   statsContainer: {
     paddingHorizontal: 16,

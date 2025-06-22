@@ -3,7 +3,8 @@ import { View, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-na
 import { Camera, Mic, Cloud, Phone, History, Plus, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Colors } from '../constants/colors';
+import { Colors, getThemeColors } from '../constants/colors';
+import { useAppContext } from '../context/AppContext';
 
 interface FloatingActionButtonProps {
   onVoiceNote?: () => void;
@@ -19,6 +20,8 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0)).current;
+  const { isDarkMode } = useAppContext();
+  const theme = getThemeColors(isDarkMode);
 
   const actions = [
     {
@@ -138,7 +141,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 
   return (
     <View style={styles.container}>
-      {isExpanded && <View style={styles.overlay} />}
+      {isExpanded && <View style={[styles.overlay, { backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.3)' }]} />}
       
       {actions.map((action, index) => renderActionButton(action, index))}
       
@@ -167,7 +170,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 110 : 90, // Adjusted for new tab bar height
+    bottom: Platform.OS === 'ios' ? 115 : 95, // Adjusted for new tab bar height
     right: 20,
     alignItems: 'center',
   },
@@ -177,7 +180,6 @@ const styles = StyleSheet.create({
     left: -1000,
     right: -1000,
     bottom: -1000,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     zIndex: -1,
   },
   mainButton: {
