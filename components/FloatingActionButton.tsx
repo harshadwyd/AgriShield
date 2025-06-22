@@ -1,11 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Animated, Platform, Dimensions } from 'react-native';
 import { Camera, Mic, Cloud, Phone, History, Plus, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, getThemeColors } from '../constants/colors';
 import { useAppContext } from '../context/AppContext';
+
+const { height } = Dimensions.get('window');
 
 interface FloatingActionButtonProps {
   onVoiceNote?: () => void;
@@ -25,15 +27,17 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   const theme = getThemeColors(isDarkMode);
   const insets = useSafeAreaInsets();
 
-  // Calculate proper position above tab bar
+  // Calculate proper position above much higher tab bar
   const getBottomPosition = () => {
     if (Platform.OS === 'ios') {
       const bottomInset = Math.max(insets.bottom, 20);
-      return 65 + bottomInset + 20; // Tab bar height + safe area + clearance
+      const basePosition = 65 + bottomInset;
+      return basePosition * 1.5 + 60; // 2.5x higher + extra clearance
     } else {
       const hasGestureNav = insets.bottom > 0;
       const systemNavHeight = hasGestureNav ? insets.bottom : 0;
-      return 65 + Math.max(systemNavHeight + 8, 12) + 20; // Tab bar + nav + clearance
+      const basePosition = 65 + Math.max(systemNavHeight + 8, 12);
+      return basePosition * 1.5 + 60; // 2.5x higher + extra clearance
     }
   };
 

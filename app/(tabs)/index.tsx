@@ -46,20 +46,22 @@ import { mockWeatherData } from '../../constants/mockData';
 
 const { width, height } = Dimensions.get('window');
 
-// Enhanced hook for dynamic padding that accounts for tab bar
+// Enhanced hook for dynamic padding that accounts for much higher tab bar
 const useDynamicPadding = () => {
   const insets = useSafeAreaInsets();
   
   return useMemo(() => {
     if (Platform.OS === 'ios') {
-      // Account for tab bar height + safe area + extra clearance
+      // Account for much higher tab bar position
       const bottomInset = Math.max(insets.bottom, 20);
-      return 65 + bottomInset + 20; // Tab bar + safe area + clearance
+      const basePosition = 65 + bottomInset;
+      return basePosition * 1.5 + 40; // 2.5x higher + extra clearance
     } else {
-      // For Android, handle gesture navigation
+      // For Android, handle much higher positioning
       const hasGestureNav = height > 800 && insets.bottom > 0;
       const systemNavHeight = hasGestureNav ? insets.bottom : 0;
-      return 65 + Math.max(systemNavHeight + 8, 12) + 20; // Tab bar + nav + clearance
+      const basePosition = 65 + Math.max(systemNavHeight + 8, 12);
+      return basePosition * 1.5 + 40; // 2.5x higher + extra clearance
     }
   }, [insets.bottom]);
 };
