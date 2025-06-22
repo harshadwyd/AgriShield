@@ -8,14 +8,27 @@ import {
   Animated, 
   ScrollView, 
   PanResponder,
-  Dimensions 
+  Dimensions,
+  Alert 
 } from 'react-native';
-import { Calculator, Droplets, DollarSign, ShoppingCart, X, ChevronDown } from 'lucide-react-native';
+import { 
+  Calculator, 
+  Droplets, 
+  DollarSign, 
+  ShoppingCart, 
+  X, 
+  ChevronDown, 
+  Package,
+  Truck,
+  Clock,
+  Shield,
+  Leaf
+} from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, getThemeColors } from '../constants/colors';
+import { Colors, DarkColors, getThemeColors } from '../constants/colors';
 import { useAppContext } from '../context/AppContext';
 import { useTranslation } from '../hooks/useTranslation';
-import { treatmentDatabase } from '../constants/mockData';
+import { treatmentDatabase, farmingSupplies } from '../constants/mockData';
 
 const { width } = Dimensions.get('window');
 
@@ -40,17 +53,22 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
   const { isDarkMode, state } = useAppContext();
   const { t } = useTranslation();
   const theme = getThemeColors(isDarkMode);
+  const colorScheme = isDarkMode ? DarkColors : Colors;
   
   const [fieldSize, setFieldSize] = useState(1.1);
   const [concentration, setConcentration] = useState(2.0);
   const [selectedTreatment, setSelectedTreatment] = useState(treatmentName);
   const [showTreatmentPicker, setShowTreatmentPicker] = useState(false);
+  const [showSupplies, setShowSupplies] = useState(false);
+  const [selectedSupplyCategory, setSelectedSupplyCategory] = useState('Seeds & Planting');
+  const [shoppingCart, setShoppingCart] = useState<any[]>([]);
   const [slideAnim] = useState(new Animated.Value(300));
   const [result, setResult] = useState<CalculationResult | null>(null);
 
   const isMetric = state.settings.units === 'metric';
   const treatmentOptions = Object.keys(treatmentDatabase);
   const currentTreatment = treatmentDatabase[selectedTreatment] || treatmentDatabase['Neem Oil'];
+  const supplyCategories = Object.keys(farmingSupplies);
 
   useEffect(() => {
     if (visible) {
@@ -69,7 +87,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
   }, [fieldSize, concentration, selectedTreatment, isMetric]);
 
   const calculateTreatment = () => {
-    const baseAmount = fieldSize * (isMetric ? 2.5 : 1); // liters per hectare or gallons per acre
+    const baseAmount = fieldSize * (isMetric ? 2.5 : 1);
     const treatmentAmount = (baseAmount * concentration) / 100;
     const waterAmount = baseAmount - treatmentAmount;
     const totalCost = treatmentAmount * currentTreatment.costPerLiter;
@@ -83,6 +101,38 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
     });
   };
 
+  const addToCart = (item: any, category: string) => {
+    const cartItem = {
+      ...item,
+      category,
+      quantity: 1,
+      id: `${category}-${item.name}-${Date.now()}`
+    };
+    setShoppingCart(prev => [...prev, cartItem]);
+    Alert.alert('Added to Cart', `${item.name} has been added to your shopping list.`);
+  };
+
+  const generateShoppingList = () => {
+    if (!result) return;
+
+    const treatmentItem = {
+      name: selectedTreatment,
+      quantity: Math.ceil(result.totalAmount * result.applications),
+      unit: 'L',
+      price: currentTreatment.costPerLiter,
+      category: 'Treatments'
+    };
+
+    const shoppingList = [treatmentItem, ...shoppingCart];
+    const totalCost = shoppingList.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    Alert.alert(
+      'Shopping List Generated',
+      `Total items: ${shoppingList.length}\nEstimated cost: $${totalCost.toFixed(2)}\n\nThis would normally be exported or shared.`,
+      [{ text: 'OK' }]
+    );
+  };
+
   const createSliderPanResponder = (
     value: number,
     min: number,
@@ -93,21 +143,17 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        // Haptic feedback would go here for mobile
-      },
+      onPanResponderGrant: () => {},
       onPanResponderMove: (evt, gestureState) => {
         const { locationX } = evt.nativeEvent;
-        const sliderWidth = width - 80; // Account for padding
+        const sliderWidth = width - 80;
         const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
         const newValue = min + (max - min) * percentage;
         const steppedValue = Math.round(newValue / step) * step;
         const clampedValue = Math.max(min, Math.min(max, steppedValue));
         onChange(clampedValue);
       },
-      onPanResponderRelease: () => {
-        // Haptic feedback would go here for mobile
-      },
+      onPanResponderRelease: () => {},
     });
   };
 
@@ -122,9 +168,18 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
       >
         <View style={styles.treatmentPickerContent}>
           <Text style={[styles.treatmentPickerText, { color: theme.text }]}>{selectedTreatment}</Text>
-          <Text style={[styles.treatmentPickerType, { color: theme.textSecondary }]}>
-            {currentTreatment.type} • ${currentTreatment.costPerLiter}/L
-          </Text>
+          <View style={styles.treatmentPickerMeta}>
+            <View style={[styles.treatmentTypeChip, { 
+              backgroundColor: currentTreatment.type === 'organic' ? colorScheme.success : 
+                              currentTreatment.type === 'biological' ? colorScheme.primary[500] : 
+                              colorScheme.accent.orange 
+            }]}>
+              <Text style={styles.treatmentTypeText}>{currentTreatment.type}</Text>
+            </View>
+            <Text style={[styles.treatmentPickerPrice, { color: theme.textSecondary }]}>
+              ${currentTreatment.costPerLiter}/L
+            </Text>
+          </View>
         </View>
         <ChevronDown 
           size={20} 
@@ -148,20 +203,34 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
                   }}
                   style={[
                     styles.treatmentOption,
-                    selectedTreatment === treatment && { backgroundColor: Colors.primary[50] }
+                    selectedTreatment === treatment && { backgroundColor: isDarkMode ? colorScheme.primary[100] : colorScheme.primary[50] }
                   ]}
                 >
                   <View style={styles.treatmentOptionContent}>
-                    <Text style={[styles.treatmentOptionName, { color: theme.text }]}>{treatment}</Text>
+                    <View style={styles.treatmentOptionHeader}>
+                      <Text style={[styles.treatmentOptionName, { color: theme.text }]}>{treatment}</Text>
+                      <View style={styles.treatmentOptionBadges}>
+                        {treatmentData.organicCertified && (
+                          <Leaf size={12} color={colorScheme.success} />
+                        )}
+                        <View style={[styles.treatmentTypeChip, { 
+                          backgroundColor: treatmentData.type === 'organic' ? colorScheme.success : 
+                                          treatmentData.type === 'biological' ? colorScheme.primary[500] : 
+                                          colorScheme.accent.orange 
+                        }]}>
+                          <Text style={styles.treatmentTypeText}>{treatmentData.type}</Text>
+                        </View>
+                      </View>
+                    </View>
                     <Text style={[styles.treatmentOptionDesc, { color: theme.textSecondary }]}>
                       {treatmentData.description}
                     </Text>
                     <View style={styles.treatmentOptionMeta}>
-                      <Text style={[styles.treatmentOptionType, { color: Colors.primary[600] }]}>
-                        {treatmentData.type}
-                      </Text>
-                      <Text style={[styles.treatmentOptionCost, { color: theme.textSecondary }]}>
+                      <Text style={[styles.treatmentOptionCost, { color: theme.text }]}>
                         ${treatmentData.costPerLiter}/L
+                      </Text>
+                      <Text style={[styles.treatmentOptionPreharvest, { color: theme.textSecondary }]}>
+                        PHI: {treatmentData.preharvest}
                       </Text>
                     </View>
                   </View>
@@ -187,7 +256,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
     <View style={styles.sliderContainer}>
       <View style={styles.sliderHeader}>
         <Text style={[styles.sliderLabel, { color: theme.text }]}>{label}</Text>
-        <Text style={[styles.sliderValue, { color: Colors.primary[600] }]}>
+        <Text style={[styles.sliderValue, { color: colorScheme.primary[600] }]}>
           {value.toFixed(1)} {unit}
         </Text>
       </View>
@@ -201,7 +270,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
             styles.sliderFill, 
             { 
               width: `${((value - min) / (max - min)) * 100}%`,
-              backgroundColor: Colors.primary[500]
+              backgroundColor: colorScheme.primary[500]
             }
           ]} 
         />
@@ -210,7 +279,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
             styles.sliderThumb,
             { 
               left: `${((value - min) / (max - min)) * 100}%`,
-              backgroundColor: Colors.primary[600]
+              backgroundColor: colorScheme.primary[600]
             }
           ]}
         />
@@ -249,7 +318,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
         
         <View style={styles.mixingSteps}>
           <View style={styles.mixingStep}>
-            <View style={[styles.stepNumber, { backgroundColor: Colors.primary[500] }]}>
+            <View style={[styles.stepNumber, { backgroundColor: colorScheme.primary[500] }]}>
               <Text style={styles.stepNumberText}>1</Text>
             </View>
             <Text style={[styles.stepText, { color: theme.textSecondary }]}>
@@ -258,7 +327,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
           </View>
           
           <View style={styles.mixingStep}>
-            <View style={[styles.stepNumber, { backgroundColor: Colors.secondary[500] }]}>
+            <View style={[styles.stepNumber, { backgroundColor: colorScheme.secondary[500] }]}>
               <Text style={styles.stepNumberText}>2</Text>
             </View>
             <Text style={[styles.stepText, { color: theme.textSecondary }]}>
@@ -267,7 +336,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
           </View>
           
           <View style={styles.mixingStep}>
-            <View style={[styles.stepNumber, { backgroundColor: Colors.accent.orange }]}>
+            <View style={[styles.stepNumber, { backgroundColor: colorScheme.accent.orange }]}>
               <Text style={styles.stepNumberText}>3</Text>
             </View>
             <Text style={[styles.stepText, { color: theme.textSecondary }]}>
@@ -277,8 +346,11 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
         </View>
 
         <View style={[styles.safetyNote, { backgroundColor: theme.background }]}>
-          <Text style={[styles.safetyTitle, { color: Colors.accent.orange }]}>⚠️ Safety Notes</Text>
+          <Text style={[styles.safetyTitle, { color: colorScheme.accent.orange }]}>⚠️ Safety Notes</Text>
           <Text style={[styles.safetyText, { color: theme.textSecondary }]}>{currentTreatment.safetyNotes}</Text>
+          <Text style={[styles.safetyText, { color: theme.textSecondary }]}>
+            Pre-harvest interval: {currentTreatment.preharvest}
+          </Text>
         </View>
       </View>
     );
@@ -290,7 +362,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
     return (
       <View style={[styles.costBreakdown, { backgroundColor: theme.surface }]}>
         <View style={styles.costHeader}>
-          <DollarSign size={20} color={Colors.accent.yellow} />
+          <DollarSign size={20} color={colorScheme.accent.yellow} />
           <Text style={[styles.costTitle, { color: theme.text }]}>Cost Breakdown</Text>
         </View>
         
@@ -309,7 +381,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
           </View>
           <View style={[styles.costItem, styles.totalCost, { borderTopColor: theme.border }]}>
             <Text style={[styles.costLabel, { color: theme.text, fontWeight: 'bold' }]}>Total Cost:</Text>
-            <Text style={[styles.costValue, { color: Colors.primary[600], fontWeight: 'bold' }]}>
+            <Text style={[styles.costValue, { color: colorScheme.primary[600], fontWeight: 'bold' }]}>
               ${(result.cost * result.applications).toFixed(2)}
             </Text>
           </View>
@@ -317,6 +389,85 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
       </View>
     );
   };
+
+  const renderSuppliesSection = () => (
+    <View style={[styles.suppliesSection, { backgroundColor: theme.surface }]}>
+      <View style={styles.suppliesHeader}>
+        <Package size={20} color={colorScheme.secondary[500]} />
+        <Text style={[styles.suppliesTitle, { color: theme.text }]}>Farming Supplies</Text>
+        <TouchableOpacity
+          onPress={() => setShowSupplies(!showSupplies)}
+          style={[styles.suppliesToggle, { backgroundColor: theme.background }]}
+        >
+          <ChevronDown 
+            size={16} 
+            color={theme.textSecondary}
+            style={{ transform: [{ rotate: showSupplies ? '180deg' : '0deg' }] }}
+          />
+        </TouchableOpacity>
+      </View>
+
+      {showSupplies && (
+        <>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoryTabs}
+            contentContainerStyle={styles.categoryTabsContent}
+          >
+            {supplyCategories.map((category) => (
+              <TouchableOpacity
+                key={category}
+                onPress={() => setSelectedSupplyCategory(category)}
+                style={[
+                  styles.categoryTab,
+                  { backgroundColor: theme.background, borderColor: theme.border },
+                  selectedSupplyCategory === category && { 
+                    backgroundColor: colorScheme.primary[500], 
+                    borderColor: colorScheme.primary[500] 
+                  }
+                ]}
+              >
+                <Text style={[
+                  styles.categoryTabText,
+                  { color: theme.textSecondary },
+                  selectedSupplyCategory === category && { color: 'white' }
+                ]}>
+                  {category}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          <ScrollView 
+            style={styles.suppliesList}
+            nestedScrollEnabled={true}
+            showsVerticalScrollIndicator={false}
+          >
+            {farmingSupplies[selectedSupplyCategory].map((item, index) => (
+              <View key={index} style={[styles.supplyItem, { backgroundColor: theme.background }]}>
+                <View style={styles.supplyItemContent}>
+                  <Text style={[styles.supplyItemName, { color: theme.text }]}>{item.name}</Text>
+                  <Text style={[styles.supplyItemDesc, { color: theme.textSecondary }]}>{item.description}</Text>
+                  <View style={styles.supplyItemMeta}>
+                    <Text style={[styles.supplyItemPrice, { color: colorScheme.primary[600] }]}>
+                      ${item.price} / {item.unit}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => addToCart(item, selectedSupplyCategory)}
+                      style={[styles.addToCartButton, { backgroundColor: colorScheme.primary[500] }]}
+                    >
+                      <Text style={styles.addToCartText}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </>
+      )}
+    </View>
+  );
 
   return (
     <Modal visible={visible} animationType="fade" transparent>
@@ -330,7 +481,7 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
         >
           <View style={[styles.header, { borderBottomColor: theme.border }]}>
             <View style={styles.headerContent}>
-              <Calculator size={24} color={Colors.primary[500]} />
+              <Calculator size={24} color={colorScheme.primary[500]} />
               <Text style={[styles.headerTitle, { color: theme.text }]}>Treatment Calculator</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -373,14 +524,17 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
 
               {renderMixingGuide()}
               {renderCostBreakdown()}
+              {renderSuppliesSection()}
 
-              <TouchableOpacity style={styles.shoppingListButton}>
+              <TouchableOpacity onPress={generateShoppingList} style={styles.shoppingListButton}>
                 <LinearGradient
-                  colors={[Colors.secondary[500], Colors.secondary[600]]}
+                  colors={[colorScheme.secondary[500], colorScheme.secondary[600]]}
                   style={styles.shoppingListGradient}
                 >
                   <ShoppingCart size={16} color="white" />
-                  <Text style={styles.shoppingListText}>Generate Shopping List</Text>
+                  <Text style={styles.shoppingListText}>
+                    Generate Shopping List ({shoppingCart.length + 1} items)
+                  </Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -398,7 +552,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    height: '90%',
+    height: '95%',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
@@ -456,11 +610,27 @@ const styles = StyleSheet.create({
   treatmentPickerText: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 2,
+    marginBottom: 6,
   },
-  treatmentPickerType: {
+  treatmentPickerMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  treatmentPickerPrice: {
     fontSize: 12,
-    textTransform: 'capitalize',
+    fontWeight: '600',
+  },
+  treatmentTypeChip: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  treatmentTypeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: 'white',
+    textTransform: 'uppercase',
   },
   treatmentOptions: {
     position: 'absolute',
@@ -488,10 +658,21 @@ const styles = StyleSheet.create({
   treatmentOptionContent: {
     flex: 1,
   },
+  treatmentOptionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
   treatmentOptionName: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 4,
+    flex: 1,
+  },
+  treatmentOptionBadges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   treatmentOptionDesc: {
     fontSize: 12,
@@ -503,14 +684,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  treatmentOptionType: {
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
   treatmentOptionCost: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
+  },
+  treatmentOptionPreharvest: {
+    fontSize: 10,
+    fontStyle: 'italic',
   },
   sliderContainer: {
     marginBottom: 32,
@@ -636,6 +816,7 @@ const styles = StyleSheet.create({
   safetyText: {
     fontSize: 12,
     lineHeight: 16,
+    marginBottom: 2,
   },
   costBreakdown: {
     borderRadius: 12,
@@ -675,6 +856,88 @@ const styles = StyleSheet.create({
   },
   costValue: {
     fontSize: 14,
+  },
+  suppliesSection: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  suppliesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  suppliesTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+    flex: 1,
+  },
+  suppliesToggle: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  categoryTabs: {
+    marginBottom: 12,
+  },
+  categoryTabsContent: {
+    gap: 8,
+    paddingRight: 16,
+  },
+  categoryTab: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  categoryTabText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  suppliesList: {
+    maxHeight: 200,
+  },
+  supplyItem: {
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  supplyItemContent: {
+    flex: 1,
+  },
+  supplyItemName: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  supplyItemDesc: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 8,
+  },
+  supplyItemMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  supplyItemPrice: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  addToCartButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  addToCartText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'white',
   },
   shoppingListButton: {
     borderRadius: 12,

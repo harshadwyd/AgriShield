@@ -314,14 +314,17 @@ export const treatmentDatabase = {
   'Neem Oil': {
     name: 'Neem Oil',
     type: 'organic',
-    baseConcentration: 2.0, // percentage
+    baseConcentration: 2.0,
     costPerLiter: 15.50,
     description: 'Natural pesticide and fungicide derived from neem tree',
     effectiveAgainst: ['aphids', 'whitefly', 'thrips', 'spider mites'],
-    mixingRatio: 0.02, // 2% concentration
+    mixingRatio: 0.02,
     waterRatio: 0.98,
     safetyNotes: 'Apply during cooler hours to avoid leaf burn',
-    shelfLife: '2 years when stored properly'
+    shelfLife: '2 years when stored properly',
+    applicationMethod: 'Foliar spray',
+    preharvest: '1 day',
+    organicCertified: true
   },
   'Copper Fungicide': {
     name: 'Copper Fungicide',
@@ -333,7 +336,10 @@ export const treatmentDatabase = {
     mixingRatio: 0.015,
     waterRatio: 0.985,
     safetyNotes: 'Wear protective equipment. Avoid copper buildup in soil',
-    shelfLife: '3 years'
+    shelfLife: '3 years',
+    applicationMethod: 'Foliar spray',
+    preharvest: '7 days',
+    organicCertified: true
   },
   'Insecticidal Soap': {
     name: 'Insecticidal Soap',
@@ -345,7 +351,10 @@ export const treatmentDatabase = {
     mixingRatio: 0.03,
     waterRatio: 0.97,
     safetyNotes: 'Safe for humans and pets. Test on small area first',
-    shelfLife: '1 year'
+    shelfLife: '1 year',
+    applicationMethod: 'Foliar spray',
+    preharvest: '0 days',
+    organicCertified: true
   },
   'Spinosad': {
     name: 'Spinosad',
@@ -357,7 +366,10 @@ export const treatmentDatabase = {
     mixingRatio: 0.008,
     waterRatio: 0.992,
     safetyNotes: 'Low toxicity to mammals. Avoid application during bee activity',
-    shelfLife: '2 years'
+    shelfLife: '2 years',
+    applicationMethod: 'Foliar spray',
+    preharvest: '3 days',
+    organicCertified: true
   },
   'Bacillus thuringiensis': {
     name: 'Bacillus thuringiensis (Bt)',
@@ -369,7 +381,10 @@ export const treatmentDatabase = {
     mixingRatio: 0.012,
     waterRatio: 0.988,
     safetyNotes: 'Completely safe for humans, pets, and beneficial insects',
-    shelfLife: '2 years when refrigerated'
+    shelfLife: '2 years when refrigerated',
+    applicationMethod: 'Foliar spray',
+    preharvest: '0 days',
+    organicCertified: true
   },
   'Horticultural Oil': {
     name: 'Horticultural Oil',
@@ -381,7 +396,10 @@ export const treatmentDatabase = {
     mixingRatio: 0.025,
     waterRatio: 0.975,
     safetyNotes: 'Do not apply in hot weather or to drought-stressed plants',
-    shelfLife: '3 years'
+    shelfLife: '3 years',
+    applicationMethod: 'Foliar spray',
+    preharvest: '1 day',
+    organicCertified: true
   },
   'Diatomaceous Earth': {
     name: 'Diatomaceous Earth',
@@ -393,7 +411,10 @@ export const treatmentDatabase = {
     mixingRatio: 0.05,
     waterRatio: 0.95,
     safetyNotes: 'Use food-grade DE only. Avoid inhalation',
-    shelfLife: 'Indefinite when kept dry'
+    shelfLife: 'Indefinite when kept dry',
+    applicationMethod: 'Dust application',
+    preharvest: '0 days',
+    organicCertified: true
   },
   'Pyrethrin': {
     name: 'Pyrethrin',
@@ -405,8 +426,123 @@ export const treatmentDatabase = {
     mixingRatio: 0.01,
     waterRatio: 0.99,
     safetyNotes: 'Fast-acting but breaks down quickly in sunlight',
-    shelfLife: '2 years'
+    shelfLife: '2 years',
+    applicationMethod: 'Foliar spray',
+    preharvest: '1 day',
+    organicCertified: true
+  },
+  'Imidacloprid': {
+    name: 'Imidacloprid',
+    type: 'chemical',
+    baseConcentration: 0.5,
+    costPerLiter: 65.00,
+    description: 'Systemic neonicotinoid insecticide for persistent control',
+    effectiveAgainst: ['aphids', 'whitefly', 'thrips', 'beetles'],
+    mixingRatio: 0.005,
+    waterRatio: 0.995,
+    safetyNotes: 'Highly toxic to bees. Avoid flowering periods. Use PPE',
+    shelfLife: '3 years',
+    applicationMethod: 'Soil drench or foliar spray',
+    preharvest: '21 days',
+    organicCertified: false
+  },
+  'Chlorpyrifos': {
+    name: 'Chlorpyrifos',
+    type: 'chemical',
+    baseConcentration: 2.0,
+    costPerLiter: 42.00,
+    description: 'Broad-spectrum organophosphate insecticide',
+    effectiveAgainst: ['caterpillars', 'beetles', 'aphids', 'thrips'],
+    mixingRatio: 0.02,
+    waterRatio: 0.98,
+    safetyNotes: 'Highly toxic. Full protective equipment required',
+    shelfLife: '2 years',
+    applicationMethod: 'Foliar spray',
+    preharvest: '14 days',
+    organicCertified: false
+  },
+  'Mancozeb': {
+    name: 'Mancozeb',
+    type: 'chemical',
+    baseConcentration: 2.5,
+    costPerLiter: 38.50,
+    description: 'Protective fungicide for disease prevention',
+    effectiveAgainst: ['blight', 'leaf spot', 'downy mildew'],
+    mixingRatio: 0.025,
+    waterRatio: 0.975,
+    safetyNotes: 'Wear protective equipment. Avoid inhalation',
+    shelfLife: '2 years',
+    applicationMethod: 'Foliar spray',
+    preharvest: '7 days',
+    organicCertified: false
+  },
+  'Glyphosate': {
+    name: 'Glyphosate',
+    type: 'chemical',
+    baseConcentration: 1.5,
+    costPerLiter: 25.00,
+    description: 'Non-selective systemic herbicide',
+    effectiveAgainst: ['weeds', 'grasses'],
+    mixingRatio: 0.015,
+    waterRatio: 0.985,
+    safetyNotes: 'Avoid contact with crops. Use protective equipment',
+    shelfLife: '3 years',
+    applicationMethod: 'Directed spray',
+    preharvest: 'Pre-planting only',
+    organicCertified: false
   }
+};
+
+// Farming supplies and equipment database
+export const farmingSupplies = {
+  'Seeds & Planting': [
+    { name: 'Tomato Seeds (Hybrid)', price: 12.50, unit: 'packet', description: 'Disease-resistant hybrid variety' },
+    { name: 'Cucumber Seeds', price: 8.75, unit: 'packet', description: 'High-yielding variety' },
+    { name: 'Pepper Seeds', price: 15.00, unit: 'packet', description: 'Hot pepper variety' },
+    { name: 'Lettuce Seeds', price: 6.25, unit: 'packet', description: 'Fast-growing leafy greens' },
+    { name: 'Seedling Trays', price: 3.50, unit: 'each', description: '72-cell plastic trays' },
+    { name: 'Seed Starting Mix', price: 18.00, unit: '20L bag', description: 'Sterile growing medium' }
+  ],
+  'Fertilizers': [
+    { name: 'NPK 10-10-10', price: 25.00, unit: '25kg bag', description: 'Balanced fertilizer' },
+    { name: 'Compost', price: 15.00, unit: '40L bag', description: 'Organic soil amendment' },
+    { name: 'Bone Meal', price: 22.50, unit: '10kg bag', description: 'Slow-release phosphorus' },
+    { name: 'Fish Emulsion', price: 18.75, unit: '4L bottle', description: 'Liquid organic fertilizer' },
+    { name: 'Calcium Nitrate', price: 28.00, unit: '25kg bag', description: 'Water-soluble calcium' },
+    { name: 'Kelp Meal', price: 35.00, unit: '10kg bag', description: 'Organic trace minerals' }
+  ],
+  'Tools & Equipment': [
+    { name: 'Hand Pruners', price: 45.00, unit: 'each', description: 'Professional bypass pruners' },
+    { name: 'Garden Hoe', price: 32.50, unit: 'each', description: 'Steel blade with wooden handle' },
+    { name: 'Watering Can', price: 28.00, unit: 'each', description: '10L galvanized steel' },
+    { name: 'Spray Bottle', price: 12.00, unit: 'each', description: '1L trigger sprayer' },
+    { name: 'Garden Gloves', price: 15.50, unit: 'pair', description: 'Nitrile-coated work gloves' },
+    { name: 'Soil Thermometer', price: 22.00, unit: 'each', description: 'Digital probe thermometer' }
+  ],
+  'Irrigation': [
+    { name: 'Drip Irrigation Kit', price: 125.00, unit: 'kit', description: 'Complete system for 50 plants' },
+    { name: 'Soaker Hose', price: 35.00, unit: '25m roll', description: 'Porous irrigation hose' },
+    { name: 'Sprinkler Heads', price: 8.50, unit: 'each', description: 'Adjustable spray pattern' },
+    { name: 'Timer Valve', price: 65.00, unit: 'each', description: 'Programmable water timer' },
+    { name: 'Pressure Regulator', price: 18.00, unit: 'each', description: '25 PSI regulator' },
+    { name: 'Filter Screen', price: 12.50, unit: 'each', description: '120 mesh inline filter' }
+  ],
+  'Protection & Support': [
+    { name: 'Row Cover', price: 45.00, unit: '10m roll', description: 'Lightweight frost protection' },
+    { name: 'Plant Stakes', price: 2.50, unit: 'each', description: '1.5m bamboo stakes' },
+    { name: 'Tomato Cages', price: 8.75, unit: 'each', description: 'Heavy-duty wire cages' },
+    { name: 'Mulch Film', price: 55.00, unit: '100m roll', description: 'Biodegradable plastic mulch' },
+    { name: 'Bird Netting', price: 38.00, unit: '10x10m', description: 'Fine mesh crop protection' },
+    { name: 'Greenhouse Clips', price: 15.00, unit: '50 pack', description: 'Plant support clips' }
+  ],
+  'Monitoring & Testing': [
+    { name: 'pH Test Kit', price: 25.00, unit: 'kit', description: 'Soil and water pH testing' },
+    { name: 'Moisture Meter', price: 35.00, unit: 'each', description: 'Digital soil moisture gauge' },
+    { name: 'Weather Station', price: 185.00, unit: 'each', description: 'Wireless weather monitoring' },
+    { name: 'Magnifying Glass', price: 18.50, unit: 'each', description: '10x magnification for pest ID' },
+    { name: 'Sticky Traps', price: 12.00, unit: '10 pack', description: 'Yellow and blue insect traps' },
+    { name: 'Soil Test Kit', price: 45.00, unit: 'kit', description: 'NPK and pH testing kit' }
+  ]
 };
 
 export const mockEducationalContent: EducationalContent[] = [
