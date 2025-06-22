@@ -21,7 +21,7 @@ export default function TabLayout() {
       // For iOS, ensure we're above the home indicator
       const bottomInset = Math.max(insets.bottom, 20); // Minimum 20px clearance
       return {
-        height: 65,
+        height: 70, // Increased height to accommodate higher icon position
         paddingBottom: bottomInset,
         bottom: 0,
       };
@@ -31,7 +31,7 @@ export default function TabLayout() {
       const systemNavHeight = hasGestureNav ? insets.bottom : 0;
       
       return {
-        height: 65,
+        height: 70, // Increased height
         paddingBottom: Math.max(systemNavHeight + 8, 12), // Ensure minimum padding
         bottom: 0,
       };
@@ -61,7 +61,7 @@ export default function TabLayout() {
           shadowOpacity: isDarkMode ? 0.5 : 0.2,
           shadowRadius: 16,
           paddingBottom: tabBarConfig.paddingBottom,
-          paddingTop: 18, // Increased from 12 to push icons up
+          paddingTop: 25, // Significantly increased from 18 to push icons much higher
           paddingHorizontal: 8,
           // Ensure proper z-index
           zIndex: 1000,
@@ -69,21 +69,21 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: -2, // Moved up to bring closer to icons
-          marginBottom: 4, // Increased bottom margin
+          marginTop: -6, // Increased negative margin to bring labels closer to icons
+          marginBottom: 6, // Increased bottom margin for better spacing
           textAlign: 'center',
         },
         tabBarIconStyle: {
-          marginTop: 2, // Reduced from 8 to move icons up
-          marginBottom: -2, // Negative margin to move up further
+          marginTop: -4, // Significantly increased negative margin to move icons up
+          marginBottom: -6, // Increased negative margin to pull icons up further
         },
         tabBarItemStyle: {
           flex: 1,
           alignItems: 'center',
-          justifyContent: 'flex-start', // Changed from center to flex-start
-          paddingVertical: 4, // Reduced from 6
-          paddingTop: 8, // Added specific top padding
-          height: 52,
+          justifyContent: 'flex-start', // Keep flex-start for better control
+          paddingVertical: 2, // Reduced padding for tighter spacing
+          paddingTop: 12, // Increased top padding to push content up
+          height: 58, // Increased height to accommodate new positioning
           // Better visual feedback
           borderRadius: 12,
           marginHorizontal: 2,
