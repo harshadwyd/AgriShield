@@ -21,7 +21,7 @@ export default function TabLayout() {
       // For iOS, ensure we're above the home indicator
       const bottomInset = Math.max(insets.bottom, 20); // Minimum 20px clearance
       return {
-        height: 85, // Significantly increased height
+        height: 65,
         paddingBottom: bottomInset,
         bottom: 0,
       };
@@ -31,8 +31,8 @@ export default function TabLayout() {
       const systemNavHeight = hasGestureNav ? insets.bottom : 0;
       
       return {
-        height: 85, // Significantly increased height
-        paddingBottom: Math.max(systemNavHeight + 8, 16), // Increased minimum padding
+        height: 65,
+        paddingBottom: Math.max(systemNavHeight + 8, 12), // Ensure minimum padding
         bottom: 0,
       };
     }
@@ -61,7 +61,7 @@ export default function TabLayout() {
           shadowOpacity: isDarkMode ? 0.5 : 0.2,
           shadowRadius: 16,
           paddingBottom: tabBarConfig.paddingBottom,
-          paddingTop: 35, // Massively increased from 25 to push icons much higher
+          paddingTop: 12,
           paddingHorizontal: 8,
           // Ensure proper z-index
           zIndex: 1000,
@@ -69,21 +69,20 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: -8, // Increased negative margin to bring labels closer to icons
-          marginBottom: 8, // Increased bottom margin for better spacing
+          marginTop: 4,
+          marginBottom: 2,
           textAlign: 'center',
         },
         tabBarIconStyle: {
-          marginTop: -8, // Massively increased negative margin to move icons way up
-          marginBottom: -10, // Increased negative margin to pull icons up even further
+          marginTop: 8,
+          marginBottom: 2,
         },
         tabBarItemStyle: {
           flex: 1,
           alignItems: 'center',
-          justifyContent: 'flex-start', // Keep flex-start for better control
-          paddingVertical: 0, // Removed padding for maximum space
-          paddingTop: 18, // Significantly increased top padding to push content up
-          height: 68, // Increased height to accommodate new positioning
+          justifyContent: 'center',
+          paddingVertical: 6,
+          height: 52,
           // Better visual feedback
           borderRadius: 12,
           marginHorizontal: 2,
