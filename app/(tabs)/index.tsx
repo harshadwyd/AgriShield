@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,26 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Scan, History, Video, FileText, Wheat, Phone, Cloud, Thermometer, Droplets, TrendingUp, TriangleAlert as AlertTriangle, Trophy, Zap, Calculator, ArrowLeftRight } from 'lucide-react-native';
+import { 
+  Scan, 
+  History, 
+  Video, 
+  FileText, 
+  Wheat, 
+  Phone, 
+  Cloud, 
+  Thermometer, 
+  Droplets, 
+  TrendingUp, 
+  TriangleAlert as AlertTriangle, 
+  Trophy, 
+  Zap, 
+  Calculator, 
+  ArrowLeftRight 
+} from 'lucide-react-native';
 import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
 import { ActionCard } from '../../components/ActionCard';
 import { DynamicGreeting } from '../../components/DynamicGreeting';
@@ -27,13 +44,28 @@ import { useAppContext } from '../../context/AppContext';
 import { useTranslation } from '../../hooks/useTranslation';
 import { mockWeatherData } from '../../constants/mockData';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+// Custom hook for dynamic padding
+const useDynamicPadding = () => {
+  const insets = useSafeAreaInsets();
+  
+  return useMemo(() => {
+    if (Platform.OS === 'ios') {
+      return 90 + Math.max(insets.bottom, 0);
+    } else {
+      const hasGestureNav = height > 800 && insets.bottom > 0;
+      return hasGestureNav ? 85 + insets.bottom : 80;
+    }
+  }, [insets.bottom]);
+};
 
 export default function HomeScreen() {
   const { state, isDarkMode } = useAppContext();
   const { t, formatNumber } = useTranslation();
   const theme = getThemeColors(isDarkMode);
   const colorScheme = isDarkMode ? DarkColors : Colors;
+  const dynamicPadding = useDynamicPadding();
   
   const [showAchievements, setShowAchievements] = useState(false);
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
@@ -42,7 +74,9 @@ export default function HomeScreen() {
   
   const recentDetections = state.detections.slice(0, 3);
   const totalDetections = state.detections.length;
-  const issuesDetected = state.detections.filter(d => d.result.severity === 'High' || d.result.severity === 'Medium').length;
+  const issuesDetected = state.detections.filter(d => 
+    d.result.severity === 'High' || d.result.severity === 'Medium'
+  ).length;
 
   const actionCards = [
     {
@@ -93,7 +127,10 @@ export default function HomeScreen() {
   };
 
   const handleVoiceNote = () => {
-    Alert.alert('Voice Note', 'Voice note recording would start here. This feature uses device microphone to record field observations.');
+    Alert.alert(
+      'Voice Note', 
+      'Voice note recording would start here. This feature uses device microphone to record field observations.'
+    );
   };
 
   const handleWeatherCheck = () => {
@@ -124,7 +161,7 @@ export default function HomeScreen() {
       <ScrollView 
         showsVerticalScrollIndicator={false} 
         style={styles.scrollContainer}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: dynamicPadding }]}
       >
         {/* Dynamic Greeting */}
         <AdvancedAnimations animationType="slideUp" delay={0}>
@@ -137,14 +174,22 @@ export default function HomeScreen() {
             <View style={[styles.statsCard, { backgroundColor: theme.surface }]}>
               <View style={styles.statItem}>
                 <TrendingUp size={18} color={colorScheme.primary[500]} />
-                <Text style={[styles.statNumber, { color: theme.text }]}>{formatNumber(totalDetections)}</Text>
-                <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{t('home.totalScans')}</Text>
+                <Text style={[styles.statNumber, { color: theme.text }]}>
+                  {formatNumber(totalDetections)}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
+                  {t('home.totalScans')}
+                </Text>
               </View>
               <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
               <View style={styles.statItem}>
                 <AlertTriangle size={18} color={colorScheme.accent.orange} />
-                <Text style={[styles.statNumber, { color: theme.text }]}>{formatNumber(issuesDetected)}</Text>
-                <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{t('home.issuesFound')}</Text>
+                <Text style={[styles.statNumber, { color: theme.text }]}>
+                  {formatNumber(issuesDetected)}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
+                  {t('home.issuesFound')}
+                </Text>
               </View>
             </View>
           </View>
@@ -160,7 +205,9 @@ export default function HomeScreen() {
         {/* Quick Actions */}
         <AdvancedAnimations animationType="bounceIn" delay={400}>
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('home.quickActions')}</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              {t('home.quickActions')}
+            </Text>
             <View style={styles.actionGrid}>
               {actionCards.map((card, index) => (
                 <MicroInteraction key={index}>
@@ -181,9 +228,13 @@ export default function HomeScreen() {
           <AdvancedAnimations animationType="morphIn" delay={600}>
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('home.recentActivity')}</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>
+                  {t('home.recentActivity')}
+                </Text>
                 <TouchableOpacity onPress={() => router.push('/history')}>
-                  <Text style={[styles.sectionAction, { color: colorScheme.primary[600] }]}>{t('home.viewAll')}</Text>
+                  <Text style={[styles.sectionAction, { color: colorScheme.primary[600] }]}>
+                    {t('home.viewAll')}
+                  </Text>
                 </TouchableOpacity>
               </View>
               {recentDetections.map((detection, index) => (
@@ -195,7 +246,12 @@ export default function HomeScreen() {
                         style={styles.recentItemImage}
                       />
                       <View style={styles.recentItemContent}>
-                        <Text style={[styles.recentItemTitle, { color: theme.text }]} numberOfLines={1}>{detection.result.name}</Text>
+                        <Text 
+                          style={[styles.recentItemTitle, { color: theme.text }]} 
+                          numberOfLines={1}
+                        >
+                          {detection.result.name}
+                        </Text>
                         <Text style={[styles.recentItemDate, { color: theme.textSecondary }]}>
                           {new Date(detection.timestamp).toLocaleDateString()}
                         </Text>
@@ -203,7 +259,9 @@ export default function HomeScreen() {
                           styles.severityBadge,
                           { backgroundColor: getSeverityColor(detection.result.severity) }
                         ]}>
-                          <Text style={styles.severityText}>{t(`severity.${detection.result.severity.toLowerCase()}`)}</Text>
+                          <Text style={styles.severityText}>
+                            {t(`severity.${detection.result.severity.toLowerCase()}`)}
+                          </Text>
                         </View>
                       </View>
                     </TouchableOpacity>
@@ -250,7 +308,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: Platform.OS === 'ios' ? 125 : 105, // Extra padding for new tab bar height
+    // paddingBottom will be added dynamically via useDynamicPadding hook
   },
   statsContainer: {
     paddingHorizontal: 16,
