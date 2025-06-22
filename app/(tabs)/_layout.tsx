@@ -21,7 +21,7 @@ export default function TabLayout() {
       // For iOS, ensure we're above the home indicator
       const bottomInset = Math.max(insets.bottom, 20); // Minimum 20px clearance
       return {
-        height: 70, // Increased height to accommodate higher icon position
+        height: 85, // Significantly increased height
         paddingBottom: bottomInset,
         bottom: 0,
       };
@@ -31,8 +31,8 @@ export default function TabLayout() {
       const systemNavHeight = hasGestureNav ? insets.bottom : 0;
       
       return {
-        height: 70, // Increased height
-        paddingBottom: Math.max(systemNavHeight + 8, 12), // Ensure minimum padding
+        height: 85, // Significantly increased height
+        paddingBottom: Math.max(systemNavHeight + 8, 16), // Increased minimum padding
         bottom: 0,
       };
     }
@@ -61,7 +61,7 @@ export default function TabLayout() {
           shadowOpacity: isDarkMode ? 0.5 : 0.2,
           shadowRadius: 16,
           paddingBottom: tabBarConfig.paddingBottom,
-          paddingTop: 25, // Significantly increased from 18 to push icons much higher
+          paddingTop: 35, // Massively increased from 25 to push icons much higher
           paddingHorizontal: 8,
           // Ensure proper z-index
           zIndex: 1000,
@@ -69,21 +69,21 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: -6, // Increased negative margin to bring labels closer to icons
-          marginBottom: 6, // Increased bottom margin for better spacing
+          marginTop: -8, // Increased negative margin to bring labels closer to icons
+          marginBottom: 8, // Increased bottom margin for better spacing
           textAlign: 'center',
         },
         tabBarIconStyle: {
-          marginTop: -4, // Significantly increased negative margin to move icons up
-          marginBottom: -6, // Increased negative margin to pull icons up further
+          marginTop: -8, // Massively increased negative margin to move icons way up
+          marginBottom: -10, // Increased negative margin to pull icons up even further
         },
         tabBarItemStyle: {
           flex: 1,
           alignItems: 'center',
           justifyContent: 'flex-start', // Keep flex-start for better control
-          paddingVertical: 2, // Reduced padding for tighter spacing
-          paddingTop: 12, // Increased top padding to push content up
-          height: 58, // Increased height to accommodate new positioning
+          paddingVertical: 0, // Removed padding for maximum space
+          paddingTop: 18, // Significantly increased top padding to push content up
+          height: 68, // Increased height to accommodate new positioning
           // Better visual feedback
           borderRadius: 12,
           marginHorizontal: 2,
