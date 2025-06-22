@@ -61,7 +61,7 @@ export default function TabLayout() {
           shadowOpacity: isDarkMode ? 0.5 : 0.2,
           shadowRadius: 16,
           paddingBottom: tabBarConfig.paddingBottom,
-          paddingTop: 12,
+          paddingTop: 18, // Increased from 12 to push icons up
           paddingHorizontal: 8,
           // Ensure proper z-index
           zIndex: 1000,
@@ -69,19 +69,20 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: 4,
-          marginBottom: 2,
+          marginTop: -2, // Moved up to bring closer to icons
+          marginBottom: 4, // Increased bottom margin
           textAlign: 'center',
         },
         tabBarIconStyle: {
-          marginTop: 8,
-          marginBottom: 2,
+          marginTop: 2, // Reduced from 8 to move icons up
+          marginBottom: -2, // Negative margin to move up further
         },
         tabBarItemStyle: {
           flex: 1,
           alignItems: 'center',
-          justifyContent: 'center',
-          paddingVertical: 6,
+          justifyContent: 'flex-start', // Changed from center to flex-start
+          paddingVertical: 4, // Reduced from 6
+          paddingTop: 8, // Added specific top padding
           height: 52,
           // Better visual feedback
           borderRadius: 12,
