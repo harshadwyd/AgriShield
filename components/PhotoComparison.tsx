@@ -85,8 +85,11 @@ export const PhotoComparison: React.FC<PhotoComparisonProps> = ({
 
           <ScrollView 
             style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             bounces={true}
+            scrollEnabled={true}
+            nestedScrollEnabled={true}
           >
             <View style={styles.content}>
               <View style={styles.comparisonContainer}>
@@ -265,9 +268,12 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
   content: {
     padding: 20,
-    paddingBottom: 40,
   },
   comparisonContainer: {
     marginBottom: 20,

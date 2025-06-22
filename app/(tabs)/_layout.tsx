@@ -15,13 +15,13 @@ export default function TabLayout() {
   const colorScheme = isDarkMode ? DarkColors : Colors;
   const insets = useSafeAreaInsets();
 
-  // Calculate proper tab bar height and position - more compact
+  // Calculate proper tab bar height and position
   const getTabBarConfig = () => {
     if (Platform.OS === 'ios') {
       // For iOS, ensure we're above the home indicator
-      const bottomInset = Math.max(insets.bottom, 12); // Reduced from 20px
+      const bottomInset = Math.max(insets.bottom, 8);
       return {
-        height: 60, // Reduced from 75
+        height: 55,
         paddingBottom: bottomInset,
         bottom: 0,
       };
@@ -31,8 +31,8 @@ export default function TabLayout() {
       const systemNavHeight = hasGestureNav ? insets.bottom : 0;
       
       return {
-        height: 60, // Reduced from 75
-        paddingBottom: Math.max(systemNavHeight + 6, 8), // Reduced padding
+        height: 55,
+        paddingBottom: Math.max(systemNavHeight + 4, 6),
         bottom: 0,
       };
     }
@@ -47,50 +47,46 @@ export default function TabLayout() {
         tabBarActiveTintColor: colorScheme.primary[600],
         tabBarInactiveTintColor: isDarkMode ? colorScheme.neutral[400] : Colors.neutral[400],
         tabBarStyle: {
-          backgroundColor: theme.surface,
+          backgroundColor: isDarkMode ? colorScheme.neutral[100] : '#ffffff',
           borderTopWidth: 0.5,
-          borderTopColor: theme.border,
+          borderTopColor: isDarkMode ? colorScheme.neutral[200] : Colors.neutral[200],
           height: tabBarConfig.height + tabBarConfig.paddingBottom,
           position: 'absolute',
           bottom: tabBarConfig.bottom,
           left: 0,
           right: 0,
-          elevation: 16,
+          elevation: 12,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -6 },
-          shadowOpacity: isDarkMode ? 0.5 : 0.2,
-          shadowRadius: 16,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: isDarkMode ? 0.4 : 0.15,
+          shadowRadius: 12,
           paddingBottom: tabBarConfig.paddingBottom,
-          paddingTop: 6, // Reduced from 12
-          paddingHorizontal: 8,
-          // Ensure proper z-index
+          paddingTop: 4,
+          paddingHorizontal: 6,
           zIndex: 1000,
         },
         tabBarLabelStyle: {
-          fontSize: 10, // Slightly smaller
+          fontSize: 10,
           fontWeight: '600',
-          marginTop: 2, // Reduced from 4
-          marginBottom: 0, // Reduced from 2
+          marginTop: 1,
+          marginBottom: 0,
           textAlign: 'center',
         },
         tabBarIconStyle: {
-          marginTop: 4, // Reduced from 8
-          marginBottom: 0, // Reduced from 2
+          marginTop: 2,
+          marginBottom: 0,
         },
         tabBarItemStyle: {
           flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
-          paddingVertical: 4, // Reduced from 6
-          height: 44, // Reduced from 52
-          // Better visual feedback
-          borderRadius: 12,
-          marginHorizontal: 2,
+          paddingVertical: 2,
+          height: 40,
+          borderRadius: 10,
+          marginHorizontal: 1,
         },
-        // Improve interaction feedback
         tabBarPressColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
         tabBarPressOpacity: 0.7,
-        // Ensure accessibility
         tabBarAccessibilityLabel: 'Main navigation',
       }}
     >
@@ -100,7 +96,7 @@ export default function TabLayout() {
           title: t('tabs.home'),
           tabBarIcon: ({ size, color, focused }) => (
             <Home 
-              size={focused ? size : size - 1} // Slightly smaller icons
+              size={focused ? 20 : 18}
               color={color}
               strokeWidth={focused ? 2.5 : 2}
             />
@@ -113,7 +109,7 @@ export default function TabLayout() {
           title: t('tabs.detect'),
           tabBarIcon: ({ size, color, focused }) => (
             <Scan 
-              size={focused ? size : size - 1} 
+              size={focused ? 20 : 18}
               color={color}
               strokeWidth={focused ? 2.5 : 2}
             />
@@ -126,7 +122,7 @@ export default function TabLayout() {
           title: t('tabs.history'),
           tabBarIcon: ({ size, color, focused }) => (
             <History 
-              size={focused ? size : size - 1} 
+              size={focused ? 20 : 18}
               color={color}
               strokeWidth={focused ? 2.5 : 2}
             />
@@ -139,7 +135,7 @@ export default function TabLayout() {
           title: t('tabs.learn'),
           tabBarIcon: ({ size, color, focused }) => (
             <BookOpen 
-              size={focused ? size : size - 1} 
+              size={focused ? 20 : 18}
               color={color}
               strokeWidth={focused ? 2.5 : 2}
             />
@@ -152,7 +148,7 @@ export default function TabLayout() {
           title: t('tabs.settings'),
           tabBarIcon: ({ size, color, focused }) => (
             <Settings 
-              size={focused ? size : size - 1} 
+              size={focused ? 20 : 18}
               color={color}
               strokeWidth={focused ? 2.5 : 2}
             />

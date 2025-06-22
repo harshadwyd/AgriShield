@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, ScrollView, PanResponder } from 'react-native';
 import { Calculator, Droplets, DollarSign, ShoppingCart, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, getThemeColors } from '../constants/colors';
@@ -68,6 +68,37 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
     });
   };
 
+  const createSliderPanResponder = (
+    value: number,
+    min: number,
+    max: number,
+    step: number,
+    onChange: (value: number) => void
+  ) => {
+    return PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        // Optional: Add haptic feedback here
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        const { dx } = gestureState;
+        const sliderWidth = 200; // Approximate slider width
+        const percentage = Math.max(0, Math.min(1, (dx + sliderWidth / 2) / sliderWidth));
+        const newValue = min + (max - min) * percentage;
+        const steppedValue = Math.round(newValue / step) * step;
+        const clampedValue = Math.max(min, Math.min(max, steppedValue));
+        onChange(clampedValue);
+      },
+      onPanResponderRelease: () => {
+        // Optional: Add haptic feedback here
+      },
+    });
+  };
+
+  const fieldSizePanResponder = createSliderPanResponder(fieldSize, 0.1, 10, 0.1, setFieldSize);
+  const concentrationPanResponder = createSliderPanResponder(concentration, 0.5, 10, 0.5, setConcentration);
+
   const renderSlider = (
     label: string,
     value: number,
@@ -75,7 +106,8 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
     max: number,
     step: number,
     unit: string,
-    onChange: (value: number) => void
+    onChange: (value: number) => void,
+    panResponder: any
   ) => (
     <View style={styles.sliderContainer}>
       <View style={styles.sliderHeader}>
@@ -85,7 +117,10 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
         </Text>
       </View>
       
-      <View style={[styles.sliderTrack, { backgroundColor: theme.border }]}>
+      <View 
+        style={[styles.sliderTrack, { backgroundColor: theme.border }]}
+        {...panResponder.panHandlers}
+      >
         <View 
           style={[
             styles.sliderFill, 
@@ -221,8 +256,11 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
 
           <ScrollView 
             style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             bounces={true}
+            scrollEnabled={true}
+            nestedScrollEnabled={true}
           >
             <View style={styles.content}>
               <Text style={[styles.treatmentName, { color: Colors.primary[600] }]}>
@@ -236,7 +274,8 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
                 10,
                 0.1,
                 isMetric ? 'hectares' : 'acres',
-                setFieldSize
+                setFieldSize,
+                fieldSizePanResponder
               )}
 
               {renderSlider(
@@ -246,7 +285,8 @@ export const TreatmentCalculator: React.FC<TreatmentCalculatorProps> = ({
                 10,
                 0.5,
                 '%',
-                setConcentration
+                setConcentration,
+                concentrationPanResponder
               )}
 
               {renderMixingGuide()}
@@ -303,9 +343,12 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
   content: {
     padding: 20,
-    paddingBottom: 40,
   },
   treatmentName: {
     fontSize: 18,
