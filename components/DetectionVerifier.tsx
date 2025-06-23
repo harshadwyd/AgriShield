@@ -8,7 +8,7 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { Database, CheckCircle, AlertCircle, RefreshCw, Eye } from 'lucide-react-native';
+import { Database, CircleCheck as CheckCircle, CircleAlert as AlertCircle, RefreshCw, Eye } from 'lucide-react-native';
 import { Colors, getThemeColors } from '../constants/colors';
 import { useAuthContext } from './AuthProvider';
 import { useAppContext } from '../context/AppContext';
