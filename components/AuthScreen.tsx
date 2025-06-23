@@ -38,30 +38,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
   const { isDarkMode } = useAppContext();
   const theme = getThemeColors(isDarkMode);
 
-  const validateEmail = (email: string): boolean => {
-    // More comprehensive email validation
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email.trim());
-  };
-
   const handleSubmit = async () => {
-    // Trim whitespace from email
-    const trimmedEmail = formData.email.trim().toLowerCase();
-    
-    if (!trimmedEmail || !formData.password) {
+    if (!formData.email || !formData.password) {
       Alert.alert('Error', 'Please fill in all required fields');
-      return;
-    }
-
-    // Validate email format
-    if (!validateEmail(trimmedEmail)) {
-      Alert.alert('Error', 'Please enter a valid email address (e.g., user@example.com)');
-      return;
-    }
-
-    // Validate password length (Supabase requires minimum 6 characters)
-    if (formData.password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
       return;
     }
 
@@ -73,21 +52,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
     try {
       if (isSignUp) {
         const userData = {
-          full_name: formData.fullName.trim() || null,
-          farm_name: formData.farmName.trim() || null,
-          location: formData.location.trim() || null,
+          full_name: formData.fullName,
+          farm_name: formData.farmName,
+          location: formData.location,
           farm_size: formData.farmSize ? parseFloat(formData.farmSize) : null,
           primary_crops: formData.primaryCrops.split(',').map(crop => crop.trim()).filter(Boolean),
         };
 
-        await signUp(trimmedEmail, formData.password, userData);
+        await signUp(formData.email, formData.password, userData);
         Alert.alert('Success', 'Account created successfully! Please check your email for verification.');
       } else {
-        await signIn(trimmedEmail, formData.password);
+        await signIn(formData.email, formData.password);
         onAuthSuccess?.();
       }
     } catch (err) {
-      console.error('Authentication error:', err);
       Alert.alert('Error', err instanceof Error ? err.message : 'Authentication failed');
     }
   };
@@ -119,9 +97,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
         secureTextEntry={options?.secureTextEntry && !showPassword}
         keyboardType={options?.keyboardType || 'default'}
         multiline={options?.multiline}
-        autoCapitalize={field === 'email' ? 'none' : 'words'}
+        autoCapitalize="none"
         autoCorrect={false}
-        autoComplete={field === 'email' ? 'email' : field === 'password' ? 'password' : 'off'}
       />
       {field === 'password' && (
         <TouchableOpacity
@@ -167,11 +144,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
         </View>
 
         <View style={styles.form}>
-          {renderInput('email', 'Email Address (e.g., user@example.com)', <Mail size={20} color={theme.textSecondary} />, {
+          {renderInput('email', 'Email Address', <Mail size={20} color={theme.textSecondary} />, {
             keyboardType: 'email-address'
           })}
 
-          {renderInput('password', 'Password (min. 6 characters)', <Lock size={20} color={theme.textSecondary} />, {
+          {renderInput('password', 'Password', <Lock size={20} color={theme.textSecondary} />, {
             secureTextEntry: true
           })}
 
