@@ -11,7 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Globe, Ruler, Bell, Palette, Wifi, Trash2, CircleHelp as HelpCircle, Mail, Shield, ChevronRight, Download, ChartBar as BarChart3, LogOut, Edit3, Save } from 'lucide-react-native';
+import { User, Globe, Ruler, Bell, Palette, Wifi, Trash2, CircleHelp as HelpCircle, Mail, Shield, ChevronRight, Download, ChartBar as BarChart3, LogOut, CreditCard as Edit3, Save } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
 import { useAppContext } from '../../context/AppContext';
