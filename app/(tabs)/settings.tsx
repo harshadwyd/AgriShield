@@ -7,25 +7,75 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  Image,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Globe, Ruler, Bell, Palette, Wifi, Trash2, CircleHelp as HelpCircle, Mail, Shield, ChevronRight, Download, ChartBar as BarChart3 } from 'lucide-react-native';
+import { User, Globe, Ruler, Bell, Palette, Wifi, Trash2, CircleHelp as HelpCircle, Mail, Shield, ChevronRight, Download, ChartBar as BarChart3, LogOut, Edit3, Save } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
 import { useAppContext } from '../../context/AppContext';
+import { useAuthContext } from '../../components/AuthProvider';
+import { useDetections } from '../../hooks/useDetections';
 import { useTranslation } from '../../hooks/useTranslation';
 
 export default function SettingsScreen() {
   const { state, dispatch, isDarkMode } = useAppContext();
+  const { user, profile, signOut, updateProfile } = useAuthContext();
+  const { detections } = useDetections();
   const { t, formatNumber } = useTranslation();
   const theme = getThemeColors(isDarkMode);
   const colorScheme = isDarkMode ? DarkColors : Colors;
   
   const [localSettings, setLocalSettings] = useState(state.settings);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    full_name: profile?.full_name || '',
+    farm_name: profile?.farm_name || '',
+    location: profile?.location || '',
+    farm_size: profile?.farm_size?.toString() || '',
+  });
 
   const updateSetting = (key: string, value: any) => {
     const newSettings = { ...localSettings, [key]: value };
     setLocalSettings(newSettings);
     dispatch({ type: 'UPDATE_SETTINGS', payload: { [key]: value } });
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      await updateProfile({
+        full_name: profileData.full_name,
+        farm_name: profileData.farm_name,
+        location: profileData.location,
+        farm_size: profileData.farm_size ? parseFloat(profileData.farm_size) : null,
+      });
+      setIsEditingProfile(false);
+      Alert.alert('Success', 'Profile updated successfully!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    }
+  };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleClearHistory = () => {
@@ -77,6 +127,104 @@ export default function SettingsScreen() {
     </View>
   );
 
+  const renderProfileSection = () => (
+    <View style={styles.section}>
+      <View style={styles.profileHeader}>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Profile</Text>
+        <TouchableOpacity
+          onPress={() => {
+            if (isEditingProfile) {
+              handleSaveProfile();
+            } else {
+              setIsEditingProfile(true);
+            }
+          }}
+          style={[styles.editButton, { backgroundColor: colorScheme.primary[500] }]}
+        >
+          {isEditingProfile ? (
+            <Save size={16} color="white" />
+          ) : (
+            <Edit3 size={16} color="white" />
+          )}
+        </TouchableOpacity>
+      </View>
+      
+      <View style={[styles.sectionContent, { backgroundColor: theme.surface }]}>
+        <View style={styles.profileInfo}>
+          <View style={styles.avatarContainer}>
+            {profile?.avatar_url ? (
+              <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatarPlaceholder, { backgroundColor: colorScheme.primary[500] }]}>
+                <User size={32} color="white" />
+              </View>
+            )}
+          </View>
+          
+          <View style={styles.profileDetails}>
+            {isEditingProfile ? (
+              <>
+                <TextInput
+                  style={[styles.profileInput, { backgroundColor: theme.background, color: theme.text }]}
+                  value={profileData.full_name}
+                  onChangeText={(text) => setProfileData(prev => ({ ...prev, full_name: text }))}
+                  placeholder="Full Name"
+                  placeholderTextColor={theme.textSecondary}
+                />
+                <TextInput
+                  style={[styles.profileInput, { backgroundColor: theme.background, color: theme.text }]}
+                  value={profileData.farm_name}
+                  onChangeText={(text) => setProfileData(prev => ({ ...prev, farm_name: text }))}
+                  placeholder="Farm Name"
+                  placeholderTextColor={theme.textSecondary}
+                />
+                <TextInput
+                  style={[styles.profileInput, { backgroundColor: theme.background, color: theme.text }]}
+                  value={profileData.location}
+                  onChangeText={(text) => setProfileData(prev => ({ ...prev, location: text }))}
+                  placeholder="Location"
+                  placeholderTextColor={theme.textSecondary}
+                />
+                <TextInput
+                  style={[styles.profileInput, { backgroundColor: theme.background, color: theme.text }]}
+                  value={profileData.farm_size}
+                  onChangeText={(text) => setProfileData(prev => ({ ...prev, farm_size: text }))}
+                  placeholder="Farm Size (hectares)"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="numeric"
+                />
+              </>
+            ) : (
+              <>
+                <Text style={[styles.profileName, { color: theme.text }]}>
+                  {profile?.full_name || user?.email?.split('@')[0] || 'User'}
+                </Text>
+                <Text style={[styles.profileEmail, { color: theme.textSecondary }]}>
+                  {user?.email}
+                </Text>
+                {profile?.farm_name && (
+                  <Text style={[styles.profileFarm, { color: theme.textSecondary }]}>
+                    🚜 {profile.farm_name}
+                  </Text>
+                )}
+                {profile?.location && (
+                  <Text style={[styles.profileLocation, { color: theme.textSecondary }]}>
+                    📍 {profile.location}
+                  </Text>
+                )}
+                {profile?.farm_size && (
+                  <Text style={[styles.profileSize, { color: theme.textSecondary }]}>
+                    🌾 {profile.farm_size} hectares
+                  </Text>
+                )}
+              </>
+            )}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
   const getLanguageName = (code: string) => {
     switch (code) {
       case 'en': return t('settings.languages.english');
@@ -118,6 +266,8 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
+        {renderProfileSection()}
+
         {renderSection(
           t('settings.sections.userPreferences'),
           <>
@@ -218,12 +368,12 @@ export default function SettingsScreen() {
             {renderSettingItem(
               <BarChart3 size={20} color={colorScheme.primary[600]} />,
               t('settings.detectionHistory'),
-              `${formatNumber(state.detections.length)} ${t('settings.detectionHistoryDesc')}`,
+              `${formatNumber(detections.length)} ${t('settings.detectionHistoryDesc')}`,
               null,
               () => {
                 Alert.alert(
                   t('settings.detectionHistory'),
-                  `You have ${formatNumber(state.detections.length)} detections in your history.\n\nThis data is stored locally on your device and helps track your crop health over time.`,
+                  `You have ${formatNumber(detections.length)} detections in your history.\n\nThis data is stored securely in the cloud and helps track your crop health over time.`,
                   [{ text: t('ok') }]
                 );
               }
@@ -288,10 +438,23 @@ export default function SettingsScreen() {
               () => {
                 Alert.alert(
                   t('settings.privacy'),
-                  'AgriShield respects your privacy:\n\n• Your photos are processed securely\n• Detection history stays on your device\n• We don\'t share personal data\n• You control your information\n\nView full policy at agrishield.com/privacy',
+                  'AgriShield respects your privacy:\n\n• Your photos are processed securely\n• Detection history is encrypted\n• We don\'t share personal data\n• You control your information\n\nView full policy at agrishield.com/privacy',
                   [{ text: t('ok') }]
                 );
               }
+            )}
+          </>
+        )}
+
+        {renderSection(
+          'Account',
+          <>
+            {renderSettingItem(
+              <LogOut size={20} color={colorScheme.accent.red} />,
+              'Sign Out',
+              'Sign out of your account',
+              null,
+              handleSignOut
             )}
           </>
         )}
@@ -343,6 +506,71 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  editButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileInfo: {
+    flexDirection: 'row',
+    padding: 16,
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    marginRight: 16,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+  },
+  avatarPlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileDetails: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  profileEmail: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  profileFarm: {
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  profileLocation: {
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  profileSize: {
+    fontSize: 12,
+  },
+  profileInput: {
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
   },
   settingItem: {
     flexDirection: 'row',

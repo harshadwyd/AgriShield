@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,52 +7,73 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Filter, Calendar, TrendingUp, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle, ChartBar as BarChart3, Bug, Shield } from 'lucide-react-native';
 import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
 import { useAppContext } from '../../context/AppContext';
+import { useDetections } from '../../hooks/useDetections';
 import { useTranslation } from '../../hooks/useTranslation';
-import { DetectionService } from '../../services/detectionService';
 
 const { width } = Dimensions.get('window');
 
 export default function HistoryScreen() {
-  const { state, isDarkMode } = useAppContext();
+  const { isDarkMode } = useAppContext();
+  const { detections, loading, hasMore, loadMore, refresh } = useDetections({ limit: 20 });
   const { t, formatNumber, formatDate } = useTranslation();
   const theme = getThemeColors(isDarkMode);
   const colorScheme = isDarkMode ? DarkColors : Colors;
   
   const [filter, setFilter] = useState<'all' | 'pest' | 'disease'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'severity'>('date');
+  const [refreshing, setRefreshing] = useState(false);
 
-  const filteredDetections = state.detections.filter(detection => {
+  const filteredDetections = detections.filter(detection => {
     if (filter === 'all') return true;
-    return detection.type === filter;
+    return detection.detection_type === filter;
   });
 
   const sortedDetections = [...filteredDetections].sort((a, b) => {
     if (sortBy === 'date') {
-      return b.timestamp - a.timestamp;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     } else {
       const severityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
-      return severityOrder[b.result.severity] - severityOrder[a.result.severity];
+      const aSeverity = a.result_data?.severity || 'Low';
+      const bSeverity = b.result_data?.severity || 'Low';
+      return severityOrder[bSeverity] - severityOrder[aSeverity];
     }
   });
 
   const getAnalytics = () => {
-    const total = state.detections.length;
-    const highSeverity = state.detections.filter(d => d.result.severity === 'High').length;
-    const mediumSeverity = state.detections.filter(d => d.result.severity === 'Medium').length;
-    const lowSeverity = state.detections.filter(d => d.result.severity === 'Low').length;
-    const pests = state.detections.filter(d => d.type === 'pest').length;
-    const diseases = state.detections.filter(d => d.type === 'disease').length;
+    const total = detections.length;
+    const highSeverity = detections.filter(d => d.result_data?.severity === 'High').length;
+    const mediumSeverity = detections.filter(d => d.result_data?.severity === 'Medium').length;
+    const lowSeverity = detections.filter(d => d.result_data?.severity === 'Low').length;
+    const pests = detections.filter(d => d.detection_type === 'pest').length;
+    const diseases = detections.filter(d => d.detection_type === 'disease').length;
     
     return { total, highSeverity, mediumSeverity, lowSeverity, pests, diseases };
   };
 
   const analytics = getAnalytics();
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'High': return colorScheme.accent.red;
+      case 'Medium': return colorScheme.accent.orange;
+      case 'Low': return colorScheme.success;
+      default: return colorScheme.neutral[400];
+    }
+  };
 
   const renderFilterButtons = () => (
     <View style={styles.filterContainer}>
@@ -141,57 +162,65 @@ export default function HistoryScreen() {
   );
 
   const renderDetectionItem = (detection: any, index: number) => {
-    const severityColor = DetectionService.getSeverityColor(detection.result.severity);
+    const severityColor = getSeverityColor(detection.result_data?.severity || 'Low');
     
     return (
       <TouchableOpacity key={detection.id} style={[styles.detectionItem, { backgroundColor: theme.surface }]}>
         <Image
-          source={{ uri: detection.image }}
+          source={{ uri: detection.image_url }}
           style={styles.detectionImage}
         />
         
         <View style={styles.detectionContent}>
           <View style={styles.detectionHeader}>
-            <Text style={[styles.detectionName, { color: theme.text }]} numberOfLines={1}>{detection.result.name}</Text>
+            <Text style={[styles.detectionName, { color: theme.text }]} numberOfLines={1}>
+              {detection.result_data?.name || 'Detection Result'}
+            </Text>
             <View style={[styles.severityBadge, { backgroundColor: severityColor }]}>
-              <Text style={styles.severityText}>{t(`severity.${detection.result.severity.toLowerCase()}`)}</Text>
+              <Text style={styles.severityText}>
+                {t(`severity.${(detection.result_data?.severity || 'low').toLowerCase()}`)}
+              </Text>
             </View>
           </View>
           
           <Text style={[styles.detectionDate, { color: theme.textSecondary }]}>
-            {formatDate(detection.timestamp)}
+            {formatDate(new Date(detection.created_at))}
           </Text>
           
           <View style={styles.detectionMeta}>
             <View style={styles.detectionMetaItem}>
-              {detection.type === 'pest' ? (
+              {detection.detection_type === 'pest' ? (
                 <Bug size={10} color={theme.textSecondary} />
               ) : (
                 <Shield size={10} color={theme.textSecondary} />
               )}
               <Text style={[styles.detectionMetaText, { color: theme.textSecondary }]}>
-                {detection.type === 'pest' ? t('history.filters.pests') : t('history.filters.diseases')}
+                {detection.detection_type === 'pest' ? t('history.filters.pests') : t('history.filters.diseases')}
               </Text>
             </View>
             
             <View style={styles.detectionMetaItem}>
               <TrendingUp size={10} color={theme.textSecondary} />
               <Text style={[styles.detectionMetaText, { color: theme.textSecondary }]}>
-                {detection.result.confidence}% {t('detect.confidence').toLowerCase()}
+                {detection.confidence_score}% {t('detect.confidence').toLowerCase()}
               </Text>
             </View>
           </View>
           
           <View style={styles.treatmentStatus}>
-            {detection.treatmentApplied ? (
+            {detection.treatment_applied ? (
               <View style={styles.treatmentApplied}>
                 <CheckCircle size={10} color={colorScheme.success} />
-                <Text style={[styles.treatmentAppliedText, { color: colorScheme.success }]}>{t('history.treatmentStatus.applied')}</Text>
+                <Text style={[styles.treatmentAppliedText, { color: colorScheme.success }]}>
+                  {t('history.treatmentStatus.applied')}
+                </Text>
               </View>
             ) : (
               <View style={styles.treatmentPending}>
                 <AlertTriangle size={10} color={colorScheme.accent.orange} />
-                <Text style={[styles.treatmentPendingText, { color: colorScheme.accent.orange }]}>{t('history.treatmentStatus.pending')}</Text>
+                <Text style={[styles.treatmentPendingText, { color: colorScheme.accent.orange }]}>
+                  {t('history.treatmentStatus.pending')}
+                </Text>
               </View>
             )}
           </View>
@@ -209,7 +238,28 @@ export default function HistoryScreen() {
         </Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContainer}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        style={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colorScheme.primary[500]]}
+            tintColor={colorScheme.primary[500]}
+          />
+        }
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const paddingToBottom = 20;
+          if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
+            if (hasMore && !loading) {
+              loadMore();
+            }
+          }
+        }}
+        scrollEventThrottle={400}
+      >
         {analytics.total > 0 && renderAnalyticsCard()}
         
         {renderFilterButtons()}
@@ -256,12 +306,28 @@ export default function HistoryScreen() {
         <View style={styles.detectionsList}>
           {sortedDetections.length > 0 ? (
             sortedDetections.map(renderDetectionItem)
+          ) : loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colorScheme.primary[500]} />
+              <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+                Loading your detections...
+              </Text>
+            </View>
           ) : (
             <View style={styles.emptyState}>
               <BarChart3 size={50} color={theme.textSecondary} />
               <Text style={[styles.emptyStateTitle, { color: theme.text }]}>{t('history.empty.title')}</Text>
               <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}>
                 {t('history.empty.description')}
+              </Text>
+            </View>
+          )}
+          
+          {loading && sortedDetections.length > 0 && (
+            <View style={styles.loadMoreContainer}>
+              <ActivityIndicator size="small" color={colorScheme.primary[500]} />
+              <Text style={[styles.loadMoreText, { color: theme.textSecondary }]}>
+                Loading more...
               </Text>
             </View>
           )}
@@ -462,6 +528,24 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: '600',
     marginLeft: 2,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+  },
+  loadMoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  loadMoreText: {
+    marginLeft: 8,
+    fontSize: 12,
   },
   emptyState: {
     alignItems: 'center',

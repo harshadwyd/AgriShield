@@ -19,8 +19,9 @@ import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
 import { EnhancedLoadingSpinner } from '../../components/EnhancedLoadingSpinner';
 import { DetectionService } from '../../services/detectionService';
 import { useAppContext } from '../../context/AppContext';
+import { useAuthContext } from '../../components/AuthProvider';
+import { useDetections } from '../../hooks/useDetections';
 import { useTranslation } from '../../hooks/useTranslation';
-import { Detection } from '../../types';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,11 +37,13 @@ export default function DetectScreen() {
   const [analysisType, setAnalysisType] = useState<AnalysisType>('pest');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
-  const [detectionResult, setDetectionResult] = useState<Detection | null>(null);
+  const [detectionResult, setDetectionResult] = useState<any>(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const cameraRef = useRef<any>(null);
   const { dispatch, isDarkMode } = useAppContext();
+  const { user } = useAuthContext();
+  const { createDetection } = useDetections();
   const { t } = useTranslation();
   
   const theme = getThemeColors(isDarkMode);
@@ -126,7 +129,7 @@ export default function DetectScreen() {
   };
 
   const handleAnalyze = async () => {
-    if (!capturedImage) return;
+    if (!capturedImage || !user) return;
 
     setStep('analyze');
     setIsAnalyzing(true);
@@ -153,17 +156,24 @@ export default function DetectScreen() {
       clearInterval(progressInterval);
       setAnalysisProgress(100);
 
-      const detection: Detection = {
-        id: Date.now().toString(),
-        timestamp: Date.now(),
-        image: capturedImage,
-        type: analysisType,
-        crop: 'tomato',
-        result,
+      // Create detection in database
+      const detectionData = {
+        image_url: capturedImage,
+        detection_type: analysisType,
+        crop_type: 'tomato',
+        result_data: result,
+        confidence_score: result.confidence,
+        severity_level: result.severity,
+        location_data: null,
+        weather_data: null,
+        treatment_applied: false,
+        treatment_data: null,
+        notes: null,
+        is_public: false,
       };
 
-      setDetectionResult(detection);
-      dispatch({ type: 'ADD_DETECTION', payload: detection });
+      const savedDetection = await createDetection(detectionData);
+      setDetectionResult(savedDetection);
       
       setTimeout(() => {
         setStep('result');
@@ -414,7 +424,7 @@ export default function DetectScreen() {
   const renderResultStep = () => {
     if (!detectionResult) return null;
 
-    const { result } = detectionResult;
+    const result = detectionResult.result_data;
     const severityColor = DetectionService.getSeverityColor(result.severity);
 
     return (

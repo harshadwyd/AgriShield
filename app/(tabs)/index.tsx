@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Image,
   Platform,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,7 +30,9 @@ import {
   Trophy, 
   Zap, 
   Calculator, 
-  ArrowLeftRight 
+  ArrowLeftRight,
+  User,
+  Settings
 } from 'lucide-react-native';
 import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
 import { ActionCard } from '../../components/ActionCard';
@@ -41,6 +44,8 @@ import { TreatmentCalculator } from '../../components/TreatmentCalculator';
 import { PhotoComparison } from '../../components/PhotoComparison';
 import { AdvancedAnimations, MicroInteraction } from '../../components/AdvancedAnimations';
 import { useAppContext } from '../../context/AppContext';
+import { useAuthContext } from '../../components/AuthProvider';
+import { useDetections } from '../../hooks/useDetections';
 import { useTranslation } from '../../hooks/useTranslation';
 import { mockWeatherData } from '../../constants/mockData';
 
@@ -66,6 +71,8 @@ const useDynamicPadding = () => {
 
 export default function HomeScreen() {
   const { state, isDarkMode } = useAppContext();
+  const { user, profile } = useAuthContext();
+  const { detections, loading: detectionsLoading, refresh } = useDetections({ limit: 5, autoRefresh: true });
   const { t, formatNumber } = useTranslation();
   const theme = getThemeColors(isDarkMode);
   const colorScheme = isDarkMode ? DarkColors : Colors;
@@ -75,12 +82,19 @@ export default function HomeScreen() {
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
-  const recentDetections = state.detections.slice(0, 3);
-  const totalDetections = state.detections.length;
-  const issuesDetected = state.detections.filter(d => 
-    d.result.severity === 'High' || d.result.severity === 'Medium'
+  const recentDetections = detections.slice(0, 3);
+  const totalDetections = detections.length;
+  const issuesDetected = detections.filter(d => 
+    d.result_data?.severity === 'High' || d.result_data?.severity === 'Medium'
   ).length;
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  };
 
   const actionCards = [
     {
@@ -160,18 +174,58 @@ export default function HomeScreen() {
     console.log('Voice command received:', command);
   };
 
+  const handleProfilePress = () => {
+    router.push('/settings');
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView 
         showsVerticalScrollIndicator={false} 
         style={styles.scrollContainer}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: dynamicPadding }]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colorScheme.primary[500]]}
+            tintColor={colorScheme.primary[500]}
+          />
+        }
         // Improve scroll performance
         removeClippedSubviews={true}
         scrollEventThrottle={16}
       >
-        {/* Dynamic Greeting */}
+        {/* Header with Profile */}
         <AdvancedAnimations animationType="slideUp" delay={0}>
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <Text style={[styles.welcomeText, { color: theme.textSecondary }]}>
+                Welcome back,
+              </Text>
+              <Text style={[styles.userName, { color: theme.text }]}>
+                {profile?.full_name || user?.email?.split('@')[0] || 'Farmer'}
+              </Text>
+              {profile?.farm_name && (
+                <Text style={[styles.farmName, { color: theme.textSecondary }]}>
+                  {profile.farm_name}
+                </Text>
+              )}
+            </View>
+            <TouchableOpacity onPress={handleProfilePress} style={styles.profileButton}>
+              {profile?.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} style={styles.profileImage} />
+              ) : (
+                <View style={[styles.profilePlaceholder, { backgroundColor: colorScheme.primary[500] }]}>
+                  <User size={20} color="white" />
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        </AdvancedAnimations>
+
+        {/* Dynamic Greeting */}
+        <AdvancedAnimations animationType="slideUp" delay={100}>
           <DynamicGreeting />
         </AdvancedAnimations>
 
@@ -249,7 +303,7 @@ export default function HomeScreen() {
                   <MicroInteraction>
                     <TouchableOpacity style={[styles.recentItem, { backgroundColor: theme.surface }]}>
                       <Image
-                        source={{ uri: detection.image }}
+                        source={{ uri: detection.image_url }}
                         style={styles.recentItemImage}
                       />
                       <View style={styles.recentItemContent}>
@@ -257,17 +311,17 @@ export default function HomeScreen() {
                           style={[styles.recentItemTitle, { color: theme.text }]} 
                           numberOfLines={1}
                         >
-                          {detection.result.name}
+                          {detection.result_data?.name || 'Detection Result'}
                         </Text>
                         <Text style={[styles.recentItemDate, { color: theme.textSecondary }]}>
-                          {new Date(detection.timestamp).toLocaleDateString()}
+                          {new Date(detection.created_at).toLocaleDateString()}
                         </Text>
                         <View style={[
                           styles.severityBadge,
-                          { backgroundColor: getSeverityColor(detection.result.severity) }
+                          { backgroundColor: getSeverityColor(detection.result_data?.severity || 'Low') }
                         ]}>
                           <Text style={styles.severityText}>
-                            {t(`severity.${detection.result.severity.toLowerCase()}`)}
+                            {t(`severity.${(detection.result_data?.severity || 'low').toLowerCase()}`)}
                           </Text>
                         </View>
                       </View>
@@ -275,6 +329,33 @@ export default function HomeScreen() {
                   </MicroInteraction>
                 </AdvancedAnimations>
               ))}
+            </View>
+          </AdvancedAnimations>
+        )}
+
+        {/* Empty State for New Users */}
+        {recentDetections.length === 0 && !detectionsLoading && (
+          <AdvancedAnimations animationType="fadeIn" delay={600}>
+            <View style={styles.emptyState}>
+              <Scan size={60} color={colorScheme.primary[300]} />
+              <Text style={[styles.emptyStateTitle, { color: theme.text }]}>
+                Start Your First Scan
+              </Text>
+              <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}>
+                Use AI-powered detection to identify pests and diseases in your crops
+              </Text>
+              <TouchableOpacity 
+                onPress={() => router.push('/detect')}
+                style={styles.emptyStateButton}
+              >
+                <LinearGradient
+                  colors={[colorScheme.primary[500], colorScheme.primary[600]]}
+                  style={styles.emptyStateButtonGradient}
+                >
+                  <Scan size={16} color="white" />
+                  <Text style={styles.emptyStateButtonText}>Start Scanning</Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           </AdvancedAnimations>
         )}
@@ -318,9 +399,48 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     // paddingBottom will be added dynamically via useDynamicPadding hook
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  headerContent: {
+    flex: 1,
+  },
+  welcomeText: {
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  farmName: {
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+  profileButton: {
+    marginLeft: 16,
+  },
+  profileImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  profilePlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   statsContainer: {
     paddingHorizontal: 16,
-    marginTop: 16,
+    marginTop: 8,
   },
   statsCard: {
     borderRadius: 16,
@@ -414,6 +534,41 @@ const styles = StyleSheet.create({
   severityText: {
     fontSize: 10,
     color: 'white',
+    fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 48,
+    paddingHorizontal: 32,
+    marginTop: 24,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyStateText: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  emptyStateButton: {
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
+  emptyStateButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  emptyStateButtonText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: '600',
   },
 });
