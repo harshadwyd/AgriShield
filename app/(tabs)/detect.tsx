@@ -19,7 +19,6 @@ import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
 import { EnhancedLoadingSpinner } from '../../components/EnhancedLoadingSpinner';
 import { DetectionService } from '../../services/detectionService';
 import { useAppContext } from '../../context/AppContext';
-import { useAuthContext } from '../../components/AuthProvider';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Detection } from '../../types';
 
@@ -42,7 +41,6 @@ export default function DetectScreen() {
   const [isCapturing, setIsCapturing] = useState(false);
   const cameraRef = useRef<any>(null);
   const { dispatch, isDarkMode } = useAppContext();
-  const { user } = useAuthContext();
   const { t } = useTranslation();
   
   const theme = getThemeColors(isDarkMode);
@@ -146,12 +144,10 @@ export default function DetectScreen() {
     }, 200);
 
     try {
-      // Pass user ID to save detection to database
       const result = await DetectionService.analyzeImage(
         capturedImage,
         analysisType,
-        'tomato',
-        user?.id // This will save to database if user is logged in
+        'tomato'
       );
 
       clearInterval(progressInterval);
@@ -168,15 +164,6 @@ export default function DetectScreen() {
 
       setDetectionResult(detection);
       dispatch({ type: 'ADD_DETECTION', payload: detection });
-      
-      // Show success message
-      if (user) {
-        Alert.alert(
-          'Success!', 
-          'Detection completed and saved to your account. You can view it in the Debug tab to verify database storage.',
-          [{ text: 'OK' }]
-        );
-      }
       
       setTimeout(() => {
         setStep('result');
@@ -251,11 +238,6 @@ export default function DetectScreen() {
       <View style={styles.cameraHeader}>
         <Text style={[styles.cameraTitle, { color: theme.text }]}>{t('detect.title')}</Text>
         <Text style={[styles.cameraSubtitle, { color: theme.textSecondary }]}>{t('detect.subtitle')}</Text>
-        {user && (
-          <Text style={[styles.userInfo, { color: colorScheme.primary[600] }]}>
-            ✓ Logged in - detections will be saved to database
-          </Text>
-        )}
       </View>
 
       <View style={styles.cameraContainer}>
@@ -415,7 +397,7 @@ export default function DetectScreen() {
       <View style={styles.analyzeContainer}>
         <EnhancedLoadingSpinner 
           size="large" 
-          message={user ? 'Analyzing and saving to database...' : t('detect.analyzing')} 
+          message={t('detect.analyzing')} 
           type="analyzing"
           showProgress={true}
           progress={analysisProgress}
@@ -424,9 +406,6 @@ export default function DetectScreen() {
           <Text style={[styles.analyzeStepText, { color: theme.textSecondary }]}>{t('detect.processingSteps.processing')}</Text>
           <Text style={[styles.analyzeStepText, { color: theme.textSecondary }]}>{t('detect.processingSteps.analyzing')}</Text>
           <Text style={[styles.analyzeStepText, { color: theme.textSecondary }]}>{t('detect.processingSteps.generating')}</Text>
-          {user && (
-            <Text style={[styles.analyzeStepText, { color: colorScheme.primary[600] }]}>Saving to your account...</Text>
-          )}
         </View>
       </View>
     </View>
@@ -448,15 +427,6 @@ export default function DetectScreen() {
             <Text style={[styles.resultTitle, { color: theme.text }]}>{t('detect.results')}</Text>
             <View style={{ width: 20 }} />
           </View>
-
-          {user && (
-            <View style={[styles.savedNotification, { backgroundColor: colorScheme.success + '20' }]}>
-              <CheckCircle size={16} color={colorScheme.success} />
-              <Text style={[styles.savedNotificationText, { color: colorScheme.success }]}>
-                Detection saved to your account! Check the Debug tab to verify.
-              </Text>
-            </View>
-          )}
 
           {capturedImage && (
             <View style={styles.imageContainer}>
@@ -589,12 +559,6 @@ const styles = StyleSheet.create({
   cameraSubtitle: {
     fontSize: 14,
     textAlign: 'center',
-  },
-  userInfo: {
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 8,
-    fontWeight: '600',
   },
   cameraContainer: {
     flex: 1,
@@ -785,20 +749,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: '600',
-  },
-  savedNotification: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 16,
-    padding: 12,
-    borderRadius: 8,
-    gap: 8,
-  },
-  savedNotificationText: {
-    fontSize: 12,
-    fontWeight: '600',
-    flex: 1,
   },
   analysisTypeContainer: {
     padding: 20,

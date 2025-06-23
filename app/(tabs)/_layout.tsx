@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Chrome as Home, Scan, History, BookOpen, Settings, Bug } from 'lucide-react-native';
+import { Chrome as Home, Scan, History, BookOpen, Settings } from 'lucide-react-native';
 import { Platform, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
@@ -148,19 +148,6 @@ export default function TabLayout() {
           title: t('tabs.settings'),
           tabBarIcon: ({ size, color, focused }) => (
             <Settings 
-              size={focused ? 20 : 18}
-              color={color}
-              strokeWidth={focused ? 2.5 : 2}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="debug"
-        options={{
-          title: 'Debug',
-          tabBarIcon: ({ size, color, focused }) => (
-            <Bug 
               size={focused ? 20 : 18}
               color={color}
               strokeWidth={focused ? 2.5 : 2}
