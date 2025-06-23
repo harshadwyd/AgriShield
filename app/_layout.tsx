@@ -5,6 +5,7 @@ import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@e
 import * as SplashScreen from 'expo-splash-screen';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AppProvider } from '../context/AppContext';
+import { AuthProvider } from '../components/AuthProvider';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -30,12 +31,14 @@ export default function RootLayout() {
 
   return (
     <AppProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+      <AuthProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </AuthProvider>
     </AppProvider>
   );
 }
