@@ -44,6 +44,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
       return;
     }
 
+    // Validate password length (Supabase requires minimum 6 characters)
+    if (formData.password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+
     if (isSignUp && formData.password !== formData.confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
@@ -148,7 +154,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
             keyboardType: 'email-address'
           })}
 
-          {renderInput('password', 'Password', <Lock size={20} color={theme.textSecondary} />, {
+          {renderInput('password', 'Password (min. 6 characters)', <Lock size={20} color={theme.textSecondary} />, {
             secureTextEntry: true
           })}
 
