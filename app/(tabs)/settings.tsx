@@ -7,18 +7,15 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Globe, Ruler, Bell, Palette, Wifi, Trash2, CircleHelp as HelpCircle, Mail, Shield, ChevronRight, Download, ChartBar as BarChart3, LogOut, CreditCard as Edit } from 'lucide-react-native';
+import { User, Globe, Ruler, Bell, Palette, Wifi, Trash2, CircleHelp as HelpCircle, Mail, Shield, ChevronRight, Download, ChartBar as BarChart3 } from 'lucide-react-native';
 import { Colors, DarkColors, getThemeColors } from '../../constants/colors';
 import { useAppContext } from '../../context/AppContext';
-import { useAuthContext } from '../../components/AuthProvider';
 import { useTranslation } from '../../hooks/useTranslation';
 
 export default function SettingsScreen() {
   const { state, dispatch, isDarkMode } = useAppContext();
-  const { user, profile, signOut, updateProfile } = useAuthContext();
   const { t, formatNumber } = useTranslation();
   const theme = getThemeColors(isDarkMode);
   const colorScheme = isDarkMode ? DarkColors : Colors;
@@ -29,27 +26,6 @@ export default function SettingsScreen() {
     const newSettings = { ...localSettings, [key]: value };
     setLocalSettings(newSettings);
     dispatch({ type: 'UPDATE_SETTINGS', payload: { [key]: value } });
-  };
-
-  const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await signOut();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to sign out. Please try again.');
-            }
-          },
-        },
-      ]
-    );
   };
 
   const handleClearHistory = () => {
@@ -142,40 +118,6 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* User Profile Section */}
-        {profile && renderSection(
-          'Profile',
-          <>
-            <View style={[styles.profileSection, { borderBottomColor: theme.border }]}>
-              <View style={styles.profileInfo}>
-                <View style={[styles.avatar, { backgroundColor: colorScheme.primary[100] }]}>
-                  {profile.avatar_url ? (
-                    <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
-                  ) : (
-                    <User size={24} color={colorScheme.primary[600]} />
-                  )}
-                </View>
-                <View style={styles.profileText}>
-                  <Text style={[styles.profileName, { color: theme.text }]}>
-                    {profile.full_name || 'User'}
-                  </Text>
-                  <Text style={[styles.profileEmail, { color: theme.textSecondary }]}>
-                    {profile.email}
-                  </Text>
-                  {profile.farm_name && (
-                    <Text style={[styles.profileFarm, { color: theme.textSecondary }]}>
-                      🌾 {profile.farm_name}
-                    </Text>
-                  )}
-                </View>
-              </View>
-              <TouchableOpacity style={styles.editButton}>
-                <Edit size={16} color={colorScheme.primary[600]} />
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-
         {renderSection(
           t('settings.sections.userPreferences'),
           <>
@@ -354,20 +296,6 @@ export default function SettingsScreen() {
           </>
         )}
 
-        {/* Account Section */}
-        {user && renderSection(
-          'Account',
-          <>
-            {renderSettingItem(
-              <LogOut size={20} color={colorScheme.accent.red} />,
-              'Sign Out',
-              'Sign out of your account',
-              null,
-              handleSignOut
-            )}
-          </>
-        )}
-
         <View style={styles.appInfo}>
           <Text style={[styles.appInfoTitle, { color: colorScheme.primary[600] }]}>AgriShield 2.0</Text>
           <Text style={[styles.appInfoVersion, { color: theme.textSecondary }]}>{t('settings.version')} 2.0.0</Text>
@@ -396,50 +324,6 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 14,
-  },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  profileInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  avatarImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-  },
-  profileText: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  profileEmail: {
-    fontSize: 14,
-    marginBottom: 2,
-  },
-  profileFarm: {
-    fontSize: 12,
-  },
-  editButton: {
-    padding: 8,
   },
   section: {
     marginTop: 20,

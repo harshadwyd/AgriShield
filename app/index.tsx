@@ -5,35 +5,22 @@ import { router } from 'expo-router';
 import { OnboardingScreen } from '../components/OnboardingScreen';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useAppContext } from '../context/AppContext';
-import { useAuthContext } from '../components/AuthProvider';
 import { Colors } from '../constants/colors';
 
 export default function IndexScreen() {
   const { state } = useAppContext();
-  const { isAuthenticated, loading } = useAuthContext();
 
   useEffect(() => {
-    if (!loading) {
-      if (isAuthenticated && state.isOnboarded) {
-        // User is authenticated and onboarded, go to main app
-        const timer = setTimeout(() => {
-          router.replace('/(tabs)');
-        }, 1000);
-        return () => clearTimeout(timer);
-      } else if (isAuthenticated && !state.isOnboarded) {
-        // User is authenticated but not onboarded, stay on onboarding
-        return;
-      } else if (!isAuthenticated) {
-        // User is not authenticated, go to auth screen
-        const timer = setTimeout(() => {
-          router.replace('/auth');
-        }, 1000);
-        return () => clearTimeout(timer);
-      }
+    // Auto-navigate to main app if already onboarded
+    if (state.isOnboarded) {
+      const timer = setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, loading, state.isOnboarded]);
+  }, [state.isOnboarded]);
 
-  if (loading) {
+  if (state.isOnboarded) {
     return (
       <View style={styles.container}>
         <LinearGradient
@@ -46,20 +33,7 @@ export default function IndexScreen() {
     );
   }
 
-  if (isAuthenticated && !state.isOnboarded) {
-    return <OnboardingScreen />;
-  }
-
-  return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={[Colors.primary[500], Colors.primary[600]]}
-        style={styles.loadingContainer}
-      >
-        <LoadingSpinner message="Loading AgriShield..." size="large" />
-      </LinearGradient>
-    </View>
-  );
+  return <OnboardingScreen />;
 }
 
 const styles = StyleSheet.create({
